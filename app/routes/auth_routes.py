@@ -1,14 +1,30 @@
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime, timedelta, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from jose import JWTError
 from pydantic import BaseModel
 
 from app.database.db import get_db
+
 from app.models.user_model import User
+from app.models.refresh_token_model import RefreshToken
+from app.models.otp_model import OtpToken
 from app.schemas.user_schema import UserRegister, UserLogin
-from app.utils.hash import hash_password, verify_password
-from app.utils.jwt import create_access_token, create_refresh_token, decode_token
-from app.dependencies.auth import get_current_user
+
+from app.utils.hash import (
+    hash_password,
+    verify_password
+)
+
+from app.utils.jwt_handler import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    REFRESH_TOKEN_EXPIRE_DAYS
+)
+
+from app.middleware.auth_middleware import get_current_user
 
 router = APIRouter(
     prefix="/api/auth",
@@ -20,19 +36,39 @@ class TokenRefreshRequest(BaseModel):
     refresh_token: str
 
 
+# ─────────────────────────────────────────────────────────────
+# Register User
+# ─────────────────────────────────────────────────────────────
+
 @router.post("/register")
 def register_user(
     user: UserRegister,
     db: Session = Depends(get_db)
 ):
+
+    verified_otp = db.query(OtpToken).filter(
+        OtpToken.phone == user.phone,
+        OtpToken.purpose == "registration",
+        OtpToken.is_verified == True
+    ).order_by(
+        OtpToken.created_at.desc()
+    ).first()
+
+    if not verified_otp:
+        raise HTTPException(
+            status_code=400,
+            detail="Phone number not verified"
+        )
+
     existing_user = db.query(User).filter(
-        User.email == user.email
+        (User.email == user.email) |
+        (User.phone == user.phone)
     ).first()
 
     if existing_user:
         raise HTTPException(
             status_code=400,
-            detail="Email already registered"
+            detail="Email or phone already registered"
         )
 
     new_user = User(
@@ -44,17 +80,27 @@ def register_user(
     )
 
     db.add(new_user)
+
+    verified_otp.is_used = True
+
     db.commit()
     db.refresh(new_user)
 
-    return {"message": "User registered successfully"}
+    return {
+        "message": "User registered successfully"
+    }
 
+# ─────────────────────────────────────────────────────────────
+# Login User
+# ─────────────────────────────────────────────────────────────
 
 @router.post("/login")
 def login_user(
+    request: Request,
     user: UserLogin,
     db: Session = Depends(get_db)
 ):
+
     existing_user = db.query(User).filter(
         User.email == user.email
     ).first()
@@ -65,7 +111,10 @@ def login_user(
             detail="Invalid email or password"
         )
 
-    if not verify_password(user.password, existing_user.password):
+    if not verify_password(
+        user.password,
+        existing_user.password
+    ):
         raise HTTPException(
             status_code=400,
             detail="Invalid email or password"
@@ -77,14 +126,37 @@ def login_user(
             detail="Account is inactive or banned"
         )
 
-    token_data = {
-        "sub": str(existing_user.id),
-        "role": existing_user.role.value
-    }
+    access_token = create_access_token(
+        data={
+            "sub": str(existing_user.id),
+            "email": existing_user.email,
+            "role": existing_user.role.value
+        }
+    )
+
+    refresh_token = create_refresh_token(
+        data={
+            "sub": str(existing_user.id)
+        }
+    )
+
+    refresh_token_entry = RefreshToken(
+        user_id=existing_user.id,
+        token=refresh_token,
+        device_info=request.headers.get("user-agent"),
+        ip_address=request.client.host,
+        expires_at=datetime.now(timezone.utc) + timedelta(
+            days=REFRESH_TOKEN_EXPIRE_DAYS
+        )
+    )
+
+    db.add(refresh_token_entry)
+    db.commit()
 
     return {
-        "access_token": create_access_token(token_data),
-        "refresh_token": create_refresh_token(token_data),
+        "message": "Login successful",
+        "access_token": access_token,
+        "refresh_token": refresh_token,
         "token_type": "bearer",
         "user": {
             "id": existing_user.id,
@@ -95,47 +167,159 @@ def login_user(
     }
 
 
+# ─────────────────────────────────────────────────────────────
+# Refresh Access Token
+# ─────────────────────────────────────────────────────────────
+
 @router.post("/token/refresh")
 def refresh_access_token(
     body: TokenRefreshRequest,
     db: Session = Depends(get_db)
 ):
+
     credentials_exception = HTTPException(
         status_code=401,
         detail="Invalid or expired refresh token"
     )
 
     try:
+
         payload = decode_token(body.refresh_token)
+
+        if not payload:
+            raise credentials_exception
 
         if payload.get("type") != "refresh":
             raise credentials_exception
 
-        user_id: str = payload.get("sub")
+        user_id = payload.get("sub")
+
         if not user_id:
             raise credentials_exception
 
     except JWTError:
         raise credentials_exception
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if not user or user.status != "active":
+    stored_token = db.query(RefreshToken).filter(
+        RefreshToken.token == body.refresh_token,
+        RefreshToken.is_revoked == False
+    ).first()
+
+    if not stored_token:
         raise credentials_exception
 
-    token_data = {"sub": str(user.id), "role": user.role.value}
+    user = db.query(User).filter(
+        User.id == int(user_id)
+    ).first()
+
+    if not user:
+        raise credentials_exception
+
+    if user.status != "active":
+        raise credentials_exception
+
+    access_token = create_access_token(
+        data={
+            "sub": str(user.id),
+            "email": user.email,
+            "role": user.role.value
+        }
+    )
+
+    new_refresh_token = create_refresh_token(
+        data={
+            "sub": str(user.id)
+        }
+    )
+
+    stored_token.is_revoked = True
+
+    new_token_entry = RefreshToken(
+        user_id=user.id,
+        token=new_refresh_token,
+        expires_at=datetime.now(timezone.utc) + timedelta(
+            days=REFRESH_TOKEN_EXPIRE_DAYS
+        )
+    )
+
+    db.add(new_token_entry)
+    db.commit()
 
     return {
-        "access_token": create_access_token(token_data),
+        "access_token": access_token,
+        "refresh_token": new_refresh_token,
         "token_type": "bearer"
     }
 
 
+# ─────────────────────────────────────────────────────────────
+# Logout
+# ─────────────────────────────────────────────────────────────
+
+@router.post("/logout")
+def logout(
+    body: TokenRefreshRequest,
+    db: Session = Depends(get_db)
+):
+
+    stored_token = db.query(RefreshToken).filter(
+        RefreshToken.token == body.refresh_token,
+        RefreshToken.is_revoked == False
+    ).first()
+
+    if not stored_token:
+        raise HTTPException(
+            status_code=404,
+            detail="Token not found"
+        )
+
+    stored_token.is_revoked = True
+
+    db.commit()
+
+    return {
+        "message": "Logged out successfully"
+    }
+
+
+# ─────────────────────────────────────────────────────────────
+# Logout From All Devices
+# ─────────────────────────────────────────────────────────────
+
+@router.post("/logout-all")
+def logout_all_devices(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+
+    db.query(RefreshToken).filter(
+        RefreshToken.user_id == current_user.id,
+        RefreshToken.is_revoked == False
+    ).update({
+        "is_revoked": True
+    })
+
+    db.commit()
+
+    return {
+        "message": "Logged out from all devices"
+    }
+
+
+# ─────────────────────────────────────────────────────────────
+# Current Logged-In User
+# ─────────────────────────────────────────────────────────────
+
 @router.get("/me")
-def get_me(current_user: User = Depends(get_current_user)):
+def get_me(
+    current_user: User = Depends(get_current_user)
+):
+
     return {
         "id": current_user.id,
         "name": current_user.name,
         "email": current_user.email,
+        "phone": current_user.phone,
         "role": current_user.role.value,
         "status": current_user.status
     }
