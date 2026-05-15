@@ -10,7 +10,13 @@ from app.database.db import get_db
 from app.models.user_model import User
 from app.models.refresh_token_model import RefreshToken
 from app.models.otp_model import OtpToken
+
 from app.schemas.user_schema import UserRegister, UserLogin
+
+from app.schemas.otp_schema import (
+    ResetPasswordRequest,
+    ChangePasswordRequest
+)
 
 from app.utils.hash import (
     hash_password,
@@ -89,6 +95,7 @@ def register_user(
     return {
         "message": "User registered successfully"
     }
+
 
 # ─────────────────────────────────────────────────────────────
 # Login User
@@ -303,6 +310,85 @@ def logout_all_devices(
 
     return {
         "message": "Logged out from all devices"
+    }
+
+
+# ─────────────────────────────────────────────────────────────
+# Reset Password
+# ─────────────────────────────────────────────────────────────
+
+@router.post("/reset-password")
+def reset_password(
+    body: ResetPasswordRequest,
+    db: Session = Depends(get_db)
+):
+
+    otp_record = db.query(OtpToken).filter(
+        OtpToken.phone == body.phone,
+        OtpToken.code == body.otp_code,
+        OtpToken.purpose == "password_reset",
+        OtpToken.is_verified == True
+    ).order_by(
+        OtpToken.created_at.desc()
+    ).first()
+
+    if not otp_record:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or unverified OTP"
+        )
+
+    user = db.query(User).filter(
+        User.phone == body.phone
+    ).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    user.password = hash_password(
+        body.new_password
+    )
+
+    otp_record.is_used = True
+
+    db.commit()
+
+    return {
+        "message": "Password reset successful"
+    }
+
+
+# ─────────────────────────────────────────────────────────────
+# Change Password
+# ─────────────────────────────────────────────────────────────
+
+@router.post("/change-password")
+def change_password(
+    body: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+
+    if not verify_password(
+        body.current_password,
+        current_user.password
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Current password is incorrect"
+        )
+
+    current_user.password = hash_password(
+        body.new_password
+    )
+
+    db.commit()
+
+    return {
+        "message": "Password changed successfully"
     }
 
 

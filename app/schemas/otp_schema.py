@@ -21,7 +21,6 @@ class OtpVerifyRequest(BaseModel):
     ] = "registration"
 
 
-# NEW
 class ResendOtpRequest(BaseModel):
     phone: str
     purpose: Literal[
@@ -31,12 +30,24 @@ class ResendOtpRequest(BaseModel):
     ] = "registration"
 
 
-# NEW
 class ForgotPasswordRequest(BaseModel):
     phone: str
 
 
-# NEW
+# ─────────────────────────────────────────────────────────────
+# Reset Password
+# ─────────────────────────────────────────────────────────────
+
 class ResetPasswordRequest(BaseModel):
     phone: str
+    otp_code: str
+    new_password: str
+
+
+# ─────────────────────────────────────────────────────────────
+# Change Password
+# ─────────────────────────────────────────────────────────────
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
     new_password: str
