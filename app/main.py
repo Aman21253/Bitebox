@@ -1,7 +1,16 @@
 from fastapi import FastAPI
+
 from app.database.db import engine, Base
+
 from app.models.user_model import User
 from app.models.otp_model import OtpToken
+from app.models.restaurant_model import Restaurant
+from app.models.refresh_token_model import RefreshToken
+
+# NEW MODELS
+from app.models.permission_model import Permission
+from app.models.role_permission_model import RolePermission
+
 from app.routes.auth_routes import router as auth_router
 from app.routes.otp_routes import router as otp_router
 from app.routes.user_routes import router as user_router
@@ -9,9 +18,7 @@ from app.routes.admin_routes import router as admin_router
 from app.routes.restaurant_routes import router as restaurant_router
 from app.routes.driver_routes import router as driver_router
 from app.routes.customer_routes import router as customer_router
-from app.models.restaurant_model import Restaurant
 from app.routes.restaurant_management_routes import router as restaurant_management_router
-from app.models.refresh_token_model import RefreshToken
 
 app = FastAPI()
 
@@ -26,11 +33,16 @@ app.include_router(driver_router)
 app.include_router(customer_router)
 app.include_router(restaurant_management_router)
 
+
 @app.get("/")
 def home():
-    return {"message": "Bitebox Backend Running"}
+    return {
+        "message": "Bitebox Backend Running"
+    }
 
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok"}
+    return {
+        "status": "ok"
+    }
