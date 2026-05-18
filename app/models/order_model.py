@@ -35,23 +35,47 @@ class Order(Base):
         nullable=True
     )
 
-    status = Column(String(50), default="pending")
+    status = Column(
+        String(50),
+        default="pending"
+    )
 
     payment_status = Column(
         String(50),
         default="pending"
     )
 
-    total_amount = Column(Float, nullable=False)
+    total_amount = Column(
+        Float,
+        nullable=False
+    )
 
-    delivery_address = Column(String(500))
+    delivery_address = Column(
+        String(500)
+    )
+
+    # ─────────────────────────────────────────────
+    # DELIVERY FEATURES
+    # ─────────────────────────────────────────────
+
+    estimated_delivery_time = Column(
+        Integer,
+        default=30
+    )
+
+    delivery_status = Column(
+        String(50),
+        default="waiting_for_driver"
+    )
 
     customer = relationship(
         "User",
         foreign_keys=[customer_id]
     )
 
-    restaurant = relationship("Restaurant")
+    restaurant = relationship(
+        "Restaurant"
+    )
 
     driver = relationship(
         "User",

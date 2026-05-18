@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-
 from app.database.db import engine, Base
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.models.user_model import User
 from app.models.otp_model import OtpToken
@@ -31,9 +31,23 @@ from app.models.order_model import Order
 from app.models.order_item_model import OrderItem
 from app.models.order_item_addon_model import OrderItemAddon
 
+from app.schemas.driver_schema import (
+    DriverAvailabilityRequest,
+    DriverLocationUpdateRequest
+)
+
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
+
+app.add_middleware(
+
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(auth_router)
 app.include_router(otp_router)

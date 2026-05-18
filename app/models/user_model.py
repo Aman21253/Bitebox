@@ -1,5 +1,14 @@
-from sqlalchemy import Column, Integer, String, Enum
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Enum,
+    Float,
+    Boolean
+)
+
 from app.database.db import Base
+
 import enum
 
 
@@ -11,6 +20,7 @@ class UserRole(str, enum.Enum):
 
 
 class User(Base):
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -23,6 +33,31 @@ class User(Base):
 
     password = Column(String(255), nullable=False)
 
-    role = Column(Enum(UserRole), default=UserRole.customer)
+    role = Column(
+        Enum(UserRole),
+        default=UserRole.customer
+    )
 
-    status = Column(String(50), default="active")
+    status = Column(
+        String(50),
+        default="active"
+    )
+
+    # ─────────────────────────────────────────────
+    # DRIVER FEATURES
+    # ─────────────────────────────────────────────
+
+    is_available = Column(
+        Boolean,
+        default=False
+    )
+
+    latitude = Column(
+        Float,
+        nullable=True
+    )
+
+    longitude = Column(
+        Float,
+        nullable=True
+    )

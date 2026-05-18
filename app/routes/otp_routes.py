@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -40,7 +40,7 @@ def send_otp(
     db: Session = Depends(get_db)
 ):
 
-    one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
 
     recent_count = (
         db.query(OtpToken)
@@ -68,7 +68,7 @@ def send_otp(
 
     code = generate_otp()
 
-    expires_at = datetime.now(timezone.utc) + timedelta(
+    expires_at = datetime.utcnow() + timedelta(
         minutes=OTP_EXPIRE_MINUTES
     )
 
@@ -120,7 +120,7 @@ def resend_otp(
 
     code = generate_otp()
 
-    expires_at = datetime.now(timezone.utc) + timedelta(
+    expires_at = datetime.utcnow() + timedelta(
         minutes=OTP_EXPIRE_MINUTES
     )
 
@@ -161,7 +161,7 @@ def verify_otp(
     db: Session = Depends(get_db)
 ):
 
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
 
     otp_record = (
         db.query(OtpToken)
@@ -203,8 +203,8 @@ def verify_otp(
             detail="Invalid OTP"
         )
 
-    otp_record.is_used = True
     otp_record.is_verified = True
+    otp_record.is_used = True
 
     db.commit()
 
@@ -237,7 +237,7 @@ def forgot_password(
 
     code = generate_otp()
 
-    expires_at = datetime.now(timezone.utc) + timedelta(
+    expires_at = datetime.utcnow() + timedelta(
         minutes=OTP_EXPIRE_MINUTES
     )
 
