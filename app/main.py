@@ -10,6 +10,7 @@ from app.models.refresh_token_model import RefreshToken
 # NEW MODELS
 from app.models.permission_model import Permission
 from app.models.role_permission_model import RolePermission
+from app.models.user_address_model import UserAddress
 
 from app.routes.auth_routes import router as auth_router
 from app.routes.otp_routes import router as otp_router
@@ -19,6 +20,16 @@ from app.routes.restaurant_routes import router as restaurant_router
 from app.routes.driver_routes import router as driver_router
 from app.routes.customer_routes import router as customer_router
 from app.routes.restaurant_management_routes import router as restaurant_management_router
+
+from app.models.menu_category_model import MenuCategory
+from app.models.menu_item_model import MenuItem
+from app.models.menu_item_variant_model import MenuItemVariant
+from app.models.menu_item_addon_model import MenuItemAddon
+from app.routes.menu_routes import router as menu_router
+
+from app.models.order_model import Order
+from app.models.order_item_model import OrderItem
+from app.models.order_item_addon_model import OrderItemAddon
 
 app = FastAPI()
 
@@ -32,6 +43,7 @@ app.include_router(restaurant_router)
 app.include_router(driver_router)
 app.include_router(customer_router)
 app.include_router(restaurant_management_router)
+app.include_router(menu_router)
 
 
 @app.get("/")
