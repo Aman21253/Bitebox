@@ -20,6 +20,9 @@ import TrackOrder from "./pages/customer/TrackOrder";
 
 import RestaurantDashboard from "./pages/restaurant/RestaurantDashboard";
 import RestaurantMenu from "./pages/restaurant/RestaurantMenu";
+import RestaurantOrders from "./pages/restaurant/RestaurantOrders";
+import RestaurantAnalytics from "./pages/restaurant/RestaurantAnalytics";
+import RestaurantSettings from "./pages/restaurant/RestaurantSettings";
 
 function App() {
 
@@ -119,6 +122,39 @@ function App() {
               allowedRoles={["restaurant"]}
             >
               <RestaurantMenu />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/restaurant/orders"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={[
+                "restaurant",
+              ]}
+            >
+              <RestaurantOrders />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/restaurant/analytics"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={["restaurant"]}
+            >
+              <RestaurantAnalytics />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/restaurant/settings"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={["restaurant"]}
+            >
+              <RestaurantSettings />
             </RoleProtectedRoute>
           }
         />

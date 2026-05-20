@@ -2,20 +2,13 @@ import {
   ShoppingBag,
   IndianRupee,
   Clock3,
-  Bike,
-  LayoutDashboard,
-  ClipboardList,
-  UtensilsCrossed,
-  BarChart3,
-  Settings,
+ Bike,
   Bell,
 } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
+import RestaurantSidebar from "../../components/restaurant/RestaurantSidebar";
 
 function RestaurantDashboard() {
-
-  const navigate = useNavigate();
 
   const user = JSON.parse(
     localStorage.getItem("user")
@@ -65,34 +58,6 @@ function RestaurantDashboard() {
     },
   ];
 
-  const sidebarItems = [
-    {
-      title: "Dashboard",
-      icon: LayoutDashboard,
-      path: "/restaurant/dashboard",
-    },
-    {
-      title: "Orders",
-      icon: ClipboardList,
-      path: "/restaurant/orders",
-    },
-    {
-      title: "Menu",
-      icon: UtensilsCrossed,
-      path: "/restaurant/menu",
-    },
-    {
-      title: "Analytics",
-      icon: BarChart3,
-      path: "/restaurant/analytics",
-    },
-    {
-      title: "Settings",
-      icon: Settings,
-      path: "/restaurant/settings",
-    },
-  ];
-
   return (
 
     <div className="
@@ -102,108 +67,17 @@ function RestaurantDashboard() {
       flex
     ">
 
-      {/* SIDEBAR */}
+      {/* REUSABLE SIDEBAR */}
 
-      <div className="
-        w-[290px]
-        border-r
-        border-white/10
-        bg-black/30
-        backdrop-blur-2xl
-        p-6
-        flex
-        flex-col
-      ">
-
-        {/* LOGO */}
-
-        <div>
-
-          <h1 className="
-            text-4xl
-            font-black
-            tracking-tight
-            bg-gradient-to-r
-            from-orange-400
-            via-orange-500
-            to-red-500
-            bg-clip-text
-            text-transparent
-          ">
-            BiteBox
-          </h1>
-
-          <p className="
-            text-gray-500
-            mt-2
-          ">
-            Restaurant Portal
-          </p>
-
-        </div>
-
-        {/* NAVIGATION */}
-
-        <div className="
-          mt-12
-          space-y-4
-        ">
-
-          {
-            sidebarItems.map((item) => {
-
-              const Icon = item.icon;
-
-              return (
-
-                <button
-                  key={item.title}
-                  onClick={() =>
-                    navigate(item.path)
-                  }
-                  className={`
-                    w-full
-                    flex
-                    items-center
-                    gap-4
-                    px-6
-                    py-4
-                    rounded-2xl
-                    transition-all
-                    duration-300
-                    ${
-                      window.location.pathname === item.path
-                      ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
-                      : "hover:bg-white/5 text-gray-300"
-                    }
-                  `}
-                >
-
-                  <Icon size={22} />
-
-                  <span className="
-                    font-semibold
-                    text-[15px]
-                  ">
-                    {item.title}
-                  </span>
-
-                </button>
-              );
-            })
-          }
-
-        </div>
-
-      </div>
+      <RestaurantSidebar />
 
       {/* MAIN */}
 
       <div className="
         flex-1
-        ml-2
         px-10
         py-10
+        overflow-y-auto
       ">
 
         <div className="

@@ -1,8 +1,12 @@
+// FILE: src/pages/customer/Home.jsx
+
 import {
   Search,
   ShoppingCart,
   MapPin,
   Star,
+  Sparkles,
+  Clock3,
 } from "lucide-react";
 
 import {
@@ -22,7 +26,11 @@ function Home() {
 
   const navigate = useNavigate();
 
-  const [restaurants, setRestaurants] = useState([]);
+  const [restaurants, setRestaurants] =
+    useState([]);
+
+  const [search, setSearch] =
+    useState("");
 
   useEffect(() => {
 
@@ -49,7 +57,9 @@ function Home() {
 
   const logout = () => {
 
-    localStorage.removeItem("access_token");
+    localStorage.removeItem(
+      "access_token"
+    );
 
     localStorage.removeItem("user");
 
@@ -57,21 +67,79 @@ function Home() {
   };
 
   const categories = [
-    "🍕 Pizza",
-    "🍔 Burgers",
-    "🍗 Chicken",
-    "🥗 Healthy",
-    "🍜 Chinese",
-    "🍰 Desserts",
+    {
+      emoji: "🍕",
+      name: "Pizza",
+    },
+    {
+      emoji: "🍔",
+      name: "Burgers",
+    },
+    {
+      emoji: "🍗",
+      name: "Chicken",
+    },
+    {
+      emoji: "🥗",
+      name: "Healthy",
+    },
+    {
+      emoji: "🍜",
+      name: "Chinese",
+    },
+    {
+      emoji: "🍰",
+      name: "Desserts",
+    },
   ];
+
+  const filteredRestaurants =
+    restaurants.filter((restaurant) =>
+      restaurant.name
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    );
 
   return (
 
     <div className="
       min-h-screen
-      bg-[#070b14]
+      bg-[#050816]
       text-white
+      overflow-x-hidden
     ">
+
+      {/* BACKGROUND */}
+
+      <div className="
+        fixed
+        inset-0
+        -z-10
+      ">
+
+        <div className="
+          absolute
+          top-[-150px]
+          right-[-120px]
+          w-[500px]
+          h-[500px]
+          rounded-full
+          bg-orange-500/10
+          blur-[160px]
+        " />
+
+        <div className="
+          absolute
+          bottom-[-180px]
+          left-[-100px]
+          w-[420px]
+          h-[420px]
+          rounded-full
+          bg-blue-500/10
+          blur-[160px]
+        " />
+
+      </div>
 
       {/* NAVBAR */}
 
@@ -86,31 +154,70 @@ function Home() {
       ">
 
         <div className="
-          h-[82px]
+          h-[78px]
           px-5
           lg:px-10
           flex
           items-center
           justify-between
+          gap-5
           max-w-[1600px]
           mx-auto
         ">
 
           {/* LOGO */}
 
-          <h1 className="
-            text-4xl
-            font-black
-            tracking-tight
-            bg-gradient-to-r
-            from-orange-400
-            via-orange-500
-            to-red-500
-            bg-clip-text
-            text-transparent
+          <div className="
+            flex
+            items-center
+            gap-3
+            shrink-0
           ">
-            BiteBox
-          </h1>
+
+            <div className="
+              w-11
+              h-11
+              rounded-2xl
+              bg-gradient-to-br
+              from-orange-400
+              to-red-500
+              flex
+              items-center
+              justify-center
+              text-xl
+              shadow-[0_10px_30px_rgba(249,115,22,0.4)]
+            ">
+              🍔
+            </div>
+
+            <div>
+
+              <h1 className="
+                text-3xl
+                font-black
+                tracking-tight
+                bg-gradient-to-r
+                from-orange-400
+                via-orange-500
+                to-red-500
+                bg-clip-text
+                text-transparent
+              ">
+                BiteBox
+              </h1>
+
+              <p className="
+                text-[10px]
+                text-gray-500
+                tracking-[3px]
+                uppercase
+              ">
+                Premium Delivery
+              </p>
+
+            </div>
+
+          </div>
 
           {/* SEARCH */}
 
@@ -118,8 +225,9 @@ function Home() {
             hidden
             md:flex
             items-center
-            w-[430px]
-            h-14
+            w-full
+            max-w-[460px]
+            h-12
             px-5
             rounded-2xl
             border
@@ -129,12 +237,16 @@ function Home() {
           ">
 
             <Search
-              size={18}
+              size={17}
               className="text-gray-500"
             />
 
             <input
               type="text"
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
               placeholder="Search restaurants or food..."
               className="
                 ml-3
@@ -154,22 +266,31 @@ function Home() {
           <div className="
             flex
             items-center
-            gap-5
+            gap-3
+            shrink-0
           ">
-
-            {/* CART */}
 
             <div className="
               relative
               cursor-pointer
+              w-11
+              h-11
+              rounded-2xl
+              border
+              border-white/10
+              bg-white/5
+              flex
+              items-center
+              justify-center
+              hover:bg-white/10
+              transition-all
+              duration-300
             ">
 
               <ShoppingCart
-                size={28}
+                size={22}
                 className="
                   text-white
-                  hover:text-orange-400
-                  transition
                 "
               />
 
@@ -192,28 +313,28 @@ function Home() {
 
             </div>
 
-
             <button
-              onClick={() => navigate("/my-orders")}
+              onClick={() =>
+                navigate("/my-orders")
+              }
               className="
+                hidden
+                md:block
                 border
                 border-white/10
                 bg-white/5
                 hover:bg-white/10
                 transition-all
                 duration-300
-                px-6
-                py-3
+                px-5
+                py-2.5
                 rounded-2xl
                 text-sm
                 font-bold
-                text-white
               "
             >
               My Orders
             </button>
-
-            {/* LOGOUT */}
 
             <button
               onClick={logout}
@@ -223,8 +344,8 @@ function Home() {
                 hover:scale-105
                 transition-all
                 duration-300
-                px-6
-                py-3
+                px-5
+                py-2.5
                 rounded-2xl
                 text-sm
                 font-bold
@@ -244,64 +365,58 @@ function Home() {
       {/* MAIN */}
 
       <div className="
-        px-5
-        lg:px-10
+        px-6
+        lg:px-12
         py-8
       ">
 
         {/* HERO */}
 
-        <div className="mb-16">
+        <div className="
+          w-full
+          min-h-[calc(100vh-78px)]
+          mb-12
+        ">
 
-          <div className="
-            relative
-            overflow-hidden
-            rounded-[40px]
-            border
-            border-white/10
-            bg-[#0f172a]
-            min-h-[540px]
-            max-w-[1600px]
-            mx-auto
-            px-8
-            py-12
-            md:px-12
-            lg:px-16
-            lg:py-16
-          ">
+        <div className="
+          relative
+          overflow-hidden
+          rounded-[42px]
+          border
+          border-white/10
+          bg-[#0b1220]
+          min-h-[calc(100vh-120px)]
+          px-8
+          py-10
+          md:px-14
+          lg:px-20
+          lg:py-16
+          flex
+          items-center
+        ">
 
-            {/* ORANGE GLOW */}
+            {/* GLOW */}
 
             <div className="
               absolute
               top-[-120px]
-              right-[-100px]
-              w-[420px]
-              h-[420px]
+              right-[-80px]
+              w-[400px]
+              h-[400px]
               rounded-full
               bg-orange-500/20
-              blur-[130px]
-            " />
-
-            {/* BLUE GLOW */}
-
-            <div className="
-              absolute
-              bottom-[-140px]
-              left-[20%]
-              w-[300px]
-              h-[300px]
-              rounded-full
-              bg-blue-500/10
               blur-[120px]
             " />
 
-            {/* CENTER GLOW */}
-
             <div className="
               absolute
-              inset-0
-              bg-[radial-gradient(circle_at_center,rgba(249,115,22,0.08),transparent_45%)]
+              bottom-[-120px]
+              left-[20%]
+              w-[350px]
+              h-[350px]
+              rounded-full
+              bg-blue-500/10
+              blur-[140px]
             " />
 
             {/* CONTENT */}
@@ -309,40 +424,47 @@ function Home() {
             <div className="
               relative
               z-10
+              grid
+              lg:grid-cols-[1.3fr_0.7fr]
+              gap-16
+              items-center
               h-full
-              flex
-              flex-col
-              justify-between
-              lg:flex-row
-              lg:items-center
-              gap-14
             ">
 
               {/* LEFT */}
 
-              <div className="
-                flex-1
-                max-w-[720px]
-              ">
+              <div>
 
-                <p className="
-                  text-orange-400
+                <div className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  bg-orange-500/10
+                  border
+                  border-orange-500/20
+                  px-5
+                  py-3
+                  rounded-full
+                  text-orange-300
                   text-sm
-                  font-bold
-                  tracking-[3px]
-                  uppercase
-                  mb-6
+                  font-semibold
+                  mb-7
                 ">
+
+                  <Sparkles size={16} />
+
                   Welcome back, {user?.name}
-                </p>
+
+                </div>
 
                 <h1 className="
-                  text-[52px]
-                  sm:text-[64px]
-                  lg:text-[72px]
+                  text-[58px]
+                  sm:text-[78px]
+                  lg:text-[110px]
                   leading-[0.95]
                   font-black
                   tracking-[-3px]
+                  max-w-[900px]
                 ">
 
                   Premium
@@ -359,25 +481,23 @@ function Home() {
                 </h1>
 
                 <p className="
-                  mt-8
+                  mt-7
                   text-gray-400
-                  text-lg
+                  text-[22px]
                   leading-relaxed
-                  max-w-[560px]
+                  max-w-[580px]
                 ">
                   Discover top-rated restaurants,
-                  lightning-fast delivery, and a premium
-                  ordering experience designed for food lovers.
+                  lightning-fast delivery, and a
+                  luxury ordering experience crafted
+                  for modern food lovers.
                 </p>
-
-                {/* BUTTONS */}
 
                 <div className="
                   flex
                   flex-wrap
-                  items-center
-                  gap-5
-                  mt-10
+                  gap-4
+                  mt-7
                 ">
 
                   <button className="
@@ -386,13 +506,12 @@ function Home() {
                     hover:scale-105
                     transition-all
                     duration-300
-                    px-8
-                    py-4
+                    px-7
+                    py-3.5
                     rounded-2xl
                     font-bold
                     text-base
-                    shadow-lg
-                    shadow-orange-500/20
+                    shadow-[0_15px_40px_rgba(249,115,22,0.35)]
                   ">
                     Explore Restaurants
                   </button>
@@ -404,12 +523,11 @@ function Home() {
                     hover:bg-white/10
                     transition-all
                     duration-300
-                    px-8
-                    py-4
+                    px-7
+                    py-3.5
                     rounded-2xl
                     font-semibold
                     text-gray-300
-                    backdrop-blur-xl
                   ">
                     View Offers
                   </button>
@@ -421,83 +539,98 @@ function Home() {
               {/* RIGHT */}
 
               <div className="
-                w-full
-                lg:w-auto
                 flex
-                justify-start
-                lg:justify-center
+                justify-center
+                lg:justify-end
               ">
 
                 <div className="
                   w-full
-                  max-w-[360px]
+                  max-w-[420px]
                   bg-white/[0.05]
                   backdrop-blur-2xl
                   border
                   border-white/10
-                  rounded-[32px]
-                  p-7
-                  shadow-[0_10px_50px_rgba(0,0,0,0.35)]
+                  rounded-[34px]
+                  p-6
+                  shadow-[0_20px_70px_rgba(0,0,0,0.35)]
                 ">
-
-                  {/* TOP */}
 
                   <div className="
                     flex
                     items-center
-                    gap-4
+                    justify-between
                     mb-6
                   ">
 
                     <div className="
                       w-14
                       h-14
-                      rounded-2xl
+                      rounded-3xl
                       bg-orange-500/15
                       flex
                       items-center
                       justify-center
-                      shrink-0
                     ">
 
                       <MapPin
                         size={24}
-                        className="text-orange-400"
+                        className="
+                          text-orange-400
+                        "
                       />
 
                     </div>
 
-                    <div>
-
-                      <p className="
-                        text-xl
-                        font-bold
-                      ">
-                        Delivering to your area
-                      </p>
-
-                      <p className="
-                        text-gray-400
-                        text-sm
-                        mt-1
-                      ">
-                        Fast & secure delivery
-                      </p>
-
+                    <div className="
+                      px-3
+                      py-1.5
+                      rounded-full
+                      bg-green-500/10
+                      border
+                      border-green-500/20
+                      text-green-400
+                      text-xs
+                      font-semibold
+                    ">
+                      Live
                     </div>
 
                   </div>
 
-                  {/* STATS */}
+                  <h2 className="
+                    text-4xl
+                    font-black
+                    leading-tight
+                  ">
+                    Delivering to your area
+                  </h2>
+
+                  <p className="
+                    mt-3
+                    text-gray-400
+                    leading-relaxed
+                    text-sm
+                  ">
+                    Fast, secure and premium
+                    delivery service at your
+                    fingertips.
+                  </p>
 
                   <div className="
-                    flex
-                    items-center
-                    justify-between
-                    mb-5
+                    grid
+                    grid-cols-2
+                    gap-4
+                    mt-8
                   ">
 
-                    <div>
+                    <div className="
+                      bg-white/[0.04]
+                      border
+                      border-white/10
+                      rounded-3xl
+                      p-4
+                    ">
 
                       <p className="
                         text-3xl
@@ -507,8 +640,9 @@ function Home() {
                       </p>
 
                       <p className="
+                        mt-1
                         text-gray-400
-                        text-sm
+                        text-xs
                       ">
                         User Rating
                       </p>
@@ -516,12 +650,12 @@ function Home() {
                     </div>
 
                     <div className="
-                      w-[1px]
-                      h-12
-                      bg-white/10
-                    " />
-
-                    <div>
+                      bg-white/[0.04]
+                      border
+                      border-white/10
+                      rounded-3xl
+                      p-4
+                    ">
 
                       <p className="
                         text-3xl
@@ -531,8 +665,9 @@ function Home() {
                       </p>
 
                       <p className="
+                        mt-1
                         text-gray-400
-                        text-sm
+                        text-xs
                       ">
                         Avg Delivery
                       </p>
@@ -541,22 +676,21 @@ function Home() {
 
                   </div>
 
-                  {/* BOTTOM */}
-
                   <div className="
+                    mt-6
                     flex
                     items-center
                     gap-2
                     text-orange-300
-                    text-sm
-                    font-medium
-                    pt-5
+                    text-xs
+                    font-semibold
                     border-t
                     border-white/10
+                    pt-5
                   ">
 
                     <Star
-                      size={16}
+                      size={14}
                       fill="currentColor"
                     />
 
@@ -574,6 +708,8 @@ function Home() {
 
         </div>
 
+        <div className="h-6" />
+
         {/* CATEGORIES */}
 
         <div className="
@@ -582,14 +718,33 @@ function Home() {
           mb-14
         ">
 
-          <h2 className="
-            text-4xl
-            font-black
-            tracking-tight
+          <div className="
+            flex
+            items-center
+            justify-between
             mb-7
           ">
-            Categories
-          </h2>
+
+            <h2 className="
+              text-[36px]
+              font-black
+              tracking-tight
+            ">
+              Categories
+            </h2>
+
+            <button className="
+              hidden
+              md:flex
+              items-center
+              gap-2
+              text-orange-400
+              font-semibold
+            ">
+              View All
+            </button>
+
+          </div>
 
           <div className="
             grid
@@ -600,39 +755,46 @@ function Home() {
           ">
 
             {
-              categories.map((category, index) => (
+              categories.map(
+                (category, index) => (
 
                 <div
                   key={index}
                   className="
+                    group
+                    relative
+                    overflow-hidden
                     bg-white/[0.04]
                     border
                     border-white/10
-                    backdrop-blur-xl
-                    rounded-3xl
-                    h-[120px]
+                    rounded-[28px]
+                    h-[115px]
                     flex
                     flex-col
                     items-center
                     justify-center
                     cursor-pointer
                     hover:border-orange-500/40
-                    hover:-translate-y-1
-                    hover:shadow-[0_10px_40px_rgba(249,115,22,0.18)]
+                    hover:-translate-y-2
+                    hover:shadow-[0_20px_60px_rgba(249,115,22,0.18)]
                     transition-all
-                    duration-300
+                    duration-500
                   "
                 >
 
-                  <span className="text-4xl mb-3">
-                    {category.split(" ")[0]}
+                  <span className="
+                    text-3xl
+                  ">
+                    {category.emoji}
                   </span>
 
                   <p className="
+                    mt-3
                     font-semibold
+                    text-base
                     text-gray-300
                   ">
-                    {category.split(" ")[1]}
+                    {category.name}
                   </p>
 
                 </div>
@@ -650,14 +812,47 @@ function Home() {
           mx-auto
         ">
 
-          <h2 className="
-            text-4xl
-            font-black
-            tracking-tight
+          <div className="
+            flex
+            items-center
+            justify-between
             mb-8
           ">
-            Top Restaurants
-          </h2>
+
+            <div>
+
+              <h2 className="
+                text-[36px]
+                font-black
+                tracking-tight
+              ">
+                Top Restaurants
+              </h2>
+
+              <p className="
+                text-gray-400
+                mt-2
+              ">
+                Handpicked restaurants for you
+              </p>
+
+            </div>
+
+            <div className="
+              hidden
+              lg:flex
+              items-center
+              gap-3
+              text-gray-400
+            ">
+
+              <Clock3 size={18} />
+
+              Fast delivery guaranteed
+
+            </div>
+
+          </div>
 
           <div className="
             grid
@@ -665,16 +860,19 @@ function Home() {
             sm:grid-cols-2
             lg:grid-cols-3
             xl:grid-cols-4
-            gap-8
+            gap-7
           ">
 
             {
-              restaurants.map((restaurant) => (
+              filteredRestaurants.map(
+                (restaurant) => (
 
                 <div
                   key={restaurant.id}
                   onClick={() =>
-                    navigate(`/restaurants/${restaurant.id}`)
+                    navigate(
+                      `/restaurants/${restaurant.id}`
+                    )
                   }
                   className="
                     group
@@ -687,15 +885,16 @@ function Home() {
                     hover:border-orange-500/40
                     transition-all
                     duration-500
-                    hover:-translate-y-2
-                    hover:shadow-[0_20px_80px_rgba(249,115,22,0.18)]
+                    hover:-translate-y-3
+                    hover:shadow-[0_20px_90px_rgba(249,115,22,0.18)]
                     cursor-pointer
                   "
                 >
 
-                  {/* IMAGE */}
-
-                  <div className="overflow-hidden">
+                  <div className="
+                    relative
+                    overflow-hidden
+                  ">
 
                     <img
                       src={
@@ -705,7 +904,7 @@ function Home() {
                       alt={restaurant.name}
                       className="
                         w-full
-                        h-[270px]
+                        h-[220px]
                         object-cover
                         transition-transform
                         duration-700
@@ -713,79 +912,98 @@ function Home() {
                       "
                     />
 
-                  </div>
-
-                  {/* CONTENT */}
-
-                  <div className="p-6">
+                    <div className="
+                      absolute
+                      inset-0
+                      bg-gradient-to-t
+                      from-black/70
+                      via-transparent
+                      to-transparent
+                    " />
 
                     <div className="
+                      absolute
+                      top-4
+                      right-4
+                      bg-orange-500/20
+                      backdrop-blur-xl
+                      border
+                      border-orange-400/20
+                      text-orange-300
+                      px-3
+                      py-1.5
+                      rounded-2xl
+                      text-sm
+                      font-semibold
                       flex
-                      items-start
-                      justify-between
+                      items-center
+                      gap-1
                     ">
 
-                      <div>
+                      <Star
+                        size={14}
+                        fill="currentColor"
+                      />
 
-                        <h3 className="
-                          text-2xl
-                          font-bold
-                          text-white
-                        ">
-                          {restaurant.name}
-                        </h3>
-
-                        <p className="
-                          text-gray-400
-                          mt-2
-                        ">
-                          {restaurant.cuisine}
-                        </p>
-
-                      </div>
-
-                      <div className="
-                        bg-orange-500/20
-                        border
-                        border-orange-400/20
-                        text-orange-300
-                        px-3
-                        py-1
-                        rounded-xl
-                        text-sm
-                        font-semibold
-                        flex
-                        items-center
-                        gap-1
-                      ">
-
-                        <Star
-                          size={14}
-                          fill="currentColor"
-                        />
-
-                        {restaurant.rating}
-
-                      </div>
+                      {restaurant.rating}
 
                     </div>
 
-                    <p className="
-                      mt-5
-                      text-gray-300
-                      font-medium
+                  </div>
+
+                  <div className="p-5">
+
+                    <h3 className="
+                      text-xl
+                      font-bold
+                      text-white
+                      leading-tight
                     ">
-                      ⏱ {restaurant.delivery_time}
+                      {restaurant.name}
+                    </h3>
+
+                    <p className="
+                      text-gray-400
+                      mt-2
+                    ">
+                      {restaurant.cuisine}
                     </p>
+
+                    <div className="
+                      flex
+                      items-center
+                      justify-between
+                      mt-5
+                    ">
+
+                      <p className="
+                        text-gray-300
+                        font-medium
+                      ">
+                        ⏱ {restaurant.delivery_time}
+                      </p>
+
+                      <p className="
+                        text-orange-400
+                        font-bold
+                      ">
+                        ₹{restaurant.delivery_fee}
+                      </p>
+
+                    </div>
 
                   </div>
 
                 </div>
               ))
             }
+
           </div>
+
         </div>
+
       </div>
+
     </div>
   );
 }

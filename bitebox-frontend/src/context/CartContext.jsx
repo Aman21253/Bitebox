@@ -9,21 +9,51 @@ import API from "../api/axios";
 
 const CartContext = createContext();
 
-export const CartProvider = ({ children }) => {
+export const CartProvider = ({
+  children,
+}) => {
 
-  const [cart, setCart] = useState(null);
+  const [cart, setCart] =
+    useState(null);
 
-  const [cartOpen, setCartOpen] = useState(false);
+  const [cartOpen, setCartOpen] =
+    useState(false);
+
+  // LOAD CART ONLY FOR CUSTOMER
 
   useEffect(() => {
+
+    const user = JSON.parse(
+      localStorage.getItem("user")
+    );
+
+    if (
+      !user ||
+      user.role !== "customer"
+    ) {
+      return;
+    }
 
     fetchCart();
 
   }, []);
 
+  // FETCH CART
+
   const fetchCart = async () => {
 
     try {
+
+      const user = JSON.parse(
+        localStorage.getItem("user")
+      );
+
+      if (
+        !user ||
+        user.role !== "customer"
+      ) {
+        return;
+      }
 
       const response = await API.get(
         "/customer/cart"
@@ -38,6 +68,8 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  // ADD TO CART
+
   const addToCart = async (
     menu_item_id,
     variant_id = null,
@@ -46,6 +78,22 @@ export const CartProvider = ({ children }) => {
   ) => {
 
     try {
+
+      const user = JSON.parse(
+        localStorage.getItem("user")
+      );
+
+      if (
+        !user ||
+        user.role !== "customer"
+      ) {
+
+        alert(
+          "Only customers can add items to cart"
+        );
+
+        return;
+      }
 
       await API.post(
         "/customer/cart/add",
@@ -64,10 +112,13 @@ export const CartProvider = ({ children }) => {
     } catch (error) {
 
       alert(
-        error.response?.data?.detail
+        error.response?.data?.detail ||
+        "Failed to add item"
       );
     }
   };
+
+  // UPDATE QUANTITY
 
   const updateQuantity = async (
     cart_item_id,
@@ -91,6 +142,8 @@ export const CartProvider = ({ children }) => {
 
     }
   };
+
+  // REMOVE ITEM
 
   const removeItem = async (
     cart_item_id
