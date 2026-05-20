@@ -24,9 +24,6 @@ class MenuCategory(Base):
     )
 
     name = Column(String(100), nullable=False)
-
     description = Column(String(300), nullable=True)
-
     is_active = Column(Boolean, default=True)
-
     restaurant = relationship("Restaurant")

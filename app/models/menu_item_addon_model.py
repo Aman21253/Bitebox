@@ -24,7 +24,5 @@ class MenuItemAddon(Base):
     )
 
     name = Column(String(100), nullable=False)
-
     price = Column(Float, nullable=False)
-
     menu_item = relationship("MenuItem")

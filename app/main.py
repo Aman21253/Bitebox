@@ -36,6 +36,9 @@ from app.schemas.driver_schema import (
     DriverLocationUpdateRequest
 )
 
+from app.routes.public_restaurant_routes import router as public_restaurant_router
+from app.routes.order_router import router as order_router
+
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
@@ -58,6 +61,8 @@ app.include_router(driver_router)
 app.include_router(customer_router)
 app.include_router(restaurant_management_router)
 app.include_router(menu_router)
+app.include_router(public_restaurant_router)
+app.include_router(order_router)
 
 
 @app.get("/")
