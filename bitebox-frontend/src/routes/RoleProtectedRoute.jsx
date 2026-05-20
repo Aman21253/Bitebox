@@ -1,8 +1,8 @@
 import { Navigate } from "react-router-dom";
 
-function ProtectedRoute({
+function RoleProtectedRoute({
   children,
-  allowedRoles = [],
+  allowedRoles,
 }) {
 
   const token = localStorage.getItem(
@@ -19,7 +19,6 @@ function ProtectedRoute({
   }
 
   if (
-    allowedRoles.length > 0 &&
     !allowedRoles.includes(user?.role)
   ) {
 
@@ -29,4 +28,4 @@ function ProtectedRoute({
   return children;
 }
 
-export default ProtectedRoute;
+export default RoleProtectedRoute;

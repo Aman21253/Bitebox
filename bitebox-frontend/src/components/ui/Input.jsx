@@ -8,9 +8,14 @@ function Input({
 }) {
 
   return (
-    <div className="space-y-2">
 
-      <label className="text-sm font-semibold text-gray-700">
+    <div className="space-y-3">
+
+      <label className="
+        text-sm
+        font-semibold
+        text-gray-300
+      ">
         {label}
       </label>
 
@@ -27,14 +32,17 @@ function Input({
           px-5
           rounded-2xl
           border
-          border-gray-300
-          bg-gray-50
-          text-gray-800
+          border-white/10
+          bg-white/5
+          backdrop-blur-xl
+          text-white
+          placeholder:text-gray-500
           outline-none
-          transition
+          transition-all
+          duration-300
           focus:border-orange-500
           focus:ring-4
-          focus:ring-orange-100
+          focus:ring-orange-500/10
         "
       />
 

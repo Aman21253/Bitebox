@@ -13,16 +13,18 @@ import Input from "../../components/ui/Input";
 
 import Button from "../../components/ui/Button";
 
-function Login() {
+function RestaurantLogin() {
 
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] =
+    useState({
+      email: "",
+      password: "",
+    });
 
   const handleChange = (e) => {
 
@@ -45,6 +47,16 @@ function Login() {
         formData
       );
 
+      if (
+        response.data.user.role !==
+        "restaurant"
+      ) {
+
+        return alert(
+          "Not a restaurant account"
+        );
+      }
+
       localStorage.setItem(
         "access_token",
         response.data.access_token
@@ -55,21 +67,7 @@ function Login() {
         JSON.stringify(response.data.user)
       );
 
-      // ROLE BASED REDIRECTION
-
-      if (
-        response.data.user.role ===
-        "restaurant"
-      ) {
-
-        navigate(
-          "/restaurant/dashboard"
-        );
-
-      } else {
-
-        navigate("/");
-      }
+      navigate("/restaurant/dashboard");
 
     } catch (error) {
 
@@ -97,44 +95,33 @@ function Login() {
         border-white/10
         rounded-[36px]
         p-8
-        md:p-10
-        shadow-[0_20px_80px_rgba(0,0,0,0.35)]
       ">
 
-        {/* HEADER */}
+        <p className="
+          text-orange-400
+          uppercase
+          tracking-[3px]
+          text-xs
+          font-bold
+          mb-4
+        ">
+          Restaurant Portal
+        </p>
 
-        <div className="mb-8">
+        <h1 className="
+          text-5xl
+          font-black
+          mb-3
+        ">
+          Restaurant Login
+        </h1>
 
-          <p className="
-            text-orange-400
-            uppercase
-            tracking-[3px]
-            text-xs
-            font-bold
-            mb-4
-          ">
-            Welcome Back
-          </p>
-
-          <h2 className="
-            text-5xl
-            font-black
-            tracking-tight
-          ">
-            Login
-          </h2>
-
-          <p className="
-            text-gray-400
-            mt-4
-            text-lg
-          ">
-            Continue your premium food journey.
-          </p>
-
-        </div>
-
-        {/* FORM */}
+        <p className="
+          text-gray-400
+          mb-8
+        ">
+          Manage your restaurant orders.
+        </p>
 
         <form
           onSubmit={handleSubmit}
@@ -142,12 +129,12 @@ function Login() {
         >
 
           <Input
-            label="Email Address"
+            label="Email"
             type="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="Enter your email"
+            placeholder="Enter email"
           />
 
           <Input
@@ -156,7 +143,7 @@ function Login() {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder="Enter your password"
+            placeholder="Enter password"
           />
 
           <Button
@@ -168,23 +155,20 @@ function Login() {
 
         </form>
 
-        {/* FOOTER */}
-
         <p className="
           text-center
           mt-8
           text-gray-400
         ">
 
-          Don’t have an account?
+          New restaurant owner?
 
           <Link
-            to="/register"
+            to="/restaurant/register"
             className="
               text-orange-400
               font-semibold
               ml-2
-              hover:text-orange-300
             "
           >
             Register
@@ -198,4 +182,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default RestaurantLogin;

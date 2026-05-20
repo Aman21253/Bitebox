@@ -18,9 +18,14 @@ function Button({
         rounded-2xl
         font-bold
         text-white
-        transition
-        bg-black
-        hover:bg-gray-900
+        transition-all
+        duration-300
+        bg-orange-500
+        hover:bg-orange-400
+        hover:scale-[1.02]
+        active:scale-[0.98]
+        shadow-lg
+        shadow-orange-500/20
         disabled:opacity-70
         ${className}
       `}

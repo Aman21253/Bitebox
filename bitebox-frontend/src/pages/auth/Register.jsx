@@ -8,16 +8,12 @@ import AuthLayout from "../../layouts/AuthLayout";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 
-function Register() {
+function Register({ role = "customer" }) {
 
   const navigate = useNavigate();
-
   const [step, setStep] = useState(1);
-
   const [loading, setLoading] = useState(false);
-
   const [otp, setOtp] = useState("");
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -110,15 +106,38 @@ function Register() {
 
     <AuthLayout>
 
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-10">
+      <div className="w-full max-w-[520px] bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-[36px] p-8 md:p-10 shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
 
-        <h2 className="text-4xl font-bold mb-2">
-          Create Account
-        </h2>
+        <div className="mb-8">
 
-        <p className="text-gray-500 mb-8">
-          Join BiteBox today
-        </p>
+          <p className="
+            text-orange-400
+            uppercase
+            tracking-[3px]
+            text-xs
+            font-bold
+            mb-4
+          ">
+            Create Account
+          </p>
+          
+          <h2 className="
+            text-5xl
+            font-black
+            tracking-tight
+          ">
+            Register
+          </h2>
+          
+          <p className="
+            text-gray-400
+            mt-4
+            text-lg
+          ">
+            Join BiteBox and start ordering today.
+          </p>
+          
+        </div>
 
         {
           step === 1 ? (
