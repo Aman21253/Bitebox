@@ -41,6 +41,9 @@ from app.routes.order_router import router as order_router
 
 from app.routes.restaurant_settings_routes import router as restaurant_settings_router
 
+from app.routes.websocket_routes import router as websocket_router
+from app.routes.upload_routes import (router as upload_router)
+
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
@@ -67,7 +70,8 @@ app.include_router(public_restaurant_router)
 app.include_router(order_router)
 app.include_router(restaurant_analytics_router)
 app.include_router(restaurant_settings_router)
-
+app.include_router(websocket_router)
+app.include_router(upload_router)
 
 @app.get("/")
 def home():

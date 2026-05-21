@@ -14,6 +14,8 @@ import RestaurantSidebar from "../../components/restaurant/RestaurantSidebar";
 
 import OrderCard from "../../components/restaurant/OrderCard";
 
+import socket from "../../socket/socket";
+
 function RestaurantOrders() {
 
   const [orders, setOrders] =
@@ -22,11 +24,113 @@ function RestaurantOrders() {
   const [loading, setLoading] =
     useState(true);
 
+  // INITIAL FETCH
+
   useEffect(() => {
 
     fetchOrders();
 
   }, []);
+
+  // REALTIME SOCKET
+
+  useEffect(() => {
+
+    // CONNECTED
+
+    socket.onopen = () => {
+
+      setInterval(() => {
+        if (
+          socket.readyState === 1
+        ) {
+          socket.send("ping");
+        }
+      }, 30000);
+
+      console.log(
+        "✅ WebSocket Connected"
+      );
+    };
+
+    // RECEIVE EVENTS
+
+    socket.onmessage = async (
+      event
+    ) => {
+
+      const data = JSON.parse(
+        event.data
+      );
+
+      console.log(
+        "🔥 SOCKET EVENT:",
+        data
+      );
+
+      // NEW ORDER EVENT
+
+      if (
+        data.type === "new_order"
+      ) {
+
+        await fetchOrders();
+
+        // OPTIONAL SOUND
+
+        const audio = new Audio(
+          "/notification.mp3"
+        );
+
+        audio.play();
+
+        // OPTIONAL ALERT
+
+        alert(
+          "🔥 New Order Received!"
+        );
+      }
+
+      // STATUS UPDATE EVENT
+
+      if (
+        data.type ===
+        "order_status_updated"
+      ) {
+
+        await fetchOrders();
+      }
+    };
+
+    // ERROR
+
+    socket.onerror = (error) => {
+
+      console.log(
+        "❌ WebSocket Error:",
+        error
+      );
+    };
+
+    // DISCONNECTED
+
+    socket.onclose = () => {
+
+      console.log(
+        "⚠️ WebSocket Disconnected"
+      );
+    };
+
+    // CLEANUP
+
+    return () => {
+
+      socket.onmessage = null;
+    };
+
+  }, []);
+
+  // FETCH ORDERS
 
   const fetchOrders = async () => {
 
@@ -59,6 +163,8 @@ function RestaurantOrders() {
     }
   };
 
+  // UPDATE ORDER STATUS
+
   const updateStatus = async (
     orderId,
     status
@@ -80,6 +186,8 @@ function RestaurantOrders() {
       console.log(error);
     }
   };
+
+  // AUTO ASSIGN DRIVER
 
   const autoAssignDriver = async (
     orderId
@@ -108,6 +216,8 @@ function RestaurantOrders() {
       flex
     ">
 
+      {/* SIDEBAR */}
+
       <RestaurantSidebar />
 
       {/* MAIN */}
@@ -118,7 +228,7 @@ function RestaurantOrders() {
         overflow-y-auto
       ">
 
-        {/* TOP */}
+        {/* HEADER */}
 
         <div className="
           flex
@@ -149,6 +259,8 @@ function RestaurantOrders() {
             </h1>
 
           </div>
+
+          {/* REFRESH BUTTON */}
 
           <button
             onClick={fetchOrders}
