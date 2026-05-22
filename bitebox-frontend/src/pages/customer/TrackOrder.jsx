@@ -5,113 +5,194 @@ import {
 
 import {
   useParams,
-  useNavigate,
 } from "react-router-dom";
 
 import {
-  ArrowLeft,
-  Clock3,
-  Bike,
-  CheckCircle2,
-  ChefHat,
-  Package,
   MapPin,
+  Bike,
+  Clock3,
+  CheckCircle2,
 } from "lucide-react";
 
 import API from "../../api/axios";
+
+import LiveTrackingMap from "../../components/maps/LiveTrackingMap";
 
 function TrackOrder() {
 
   const { id } = useParams();
 
-  const navigate = useNavigate();
+  const [order, setOrder] =
+    useState(null);
 
-  const [order, setOrder] = useState(null);
+  const [loading, setLoading] =
+    useState(true);
+
+  const [driverLocation, setDriverLocation] =
+    useState(null);
+
+  // INITIAL FETCH
 
   useEffect(() => {
 
     fetchOrder();
 
-    const interval = setInterval(() => {
-
-      fetchOrder();
-
-    }, 5000);
-
-    return () => clearInterval(interval);
-
   }, []);
+
+  // REALTIME SOCKET CONNECTION
+
+  useEffect(() => {
+
+    if (!id) return;
+
+    const ws = new WebSocket(
+      `ws://127.0.0.1:8000/ws/order-tracking/${id}`
+    );
+
+    ws.onopen = () => {
+
+      console.log(
+        "✅ Customer socket connected"
+      );
+    };
+
+    ws.onmessage = (event) => {
+
+      const message = JSON.parse(
+        event.data
+      );
+
+      console.log(message);
+
+      if (
+        message.type ===
+        "location_update"
+      ) {
+
+        const data = message.data;
+
+        // UPDATE DRIVER LOCATION LIVE
+
+        setDriverLocation({
+
+          lat: data.latitude,
+
+          lng: data.longitude,
+        });
+
+        // UPDATE ORDER STATUS LIVE
+
+        setOrder((prev) => ({
+
+          ...prev,
+
+          delivery_status:
+            data.delivery_status ||
+            prev.delivery_status,
+        }));
+      }
+    };
+
+    ws.onerror = (error) => {
+
+      console.log(error);
+    };
+
+    ws.onclose = () => {
+
+      console.log(
+        "❌ Customer socket disconnected"
+      );
+    };
+
+    return () => {
+
+      ws.close();
+    };
+
+  }, [id]);
+
+  // FETCH ORDER
 
   const fetchOrder = async () => {
 
     try {
 
       const response = await API.get(
-        "/orders/my-orders"
+        `/orders/track/${id}`
       );
 
-      const currentOrder =
-        response.data.find(
-          (o) => o.id == id
-        );
+      setOrder(response.data);
 
-      setOrder(currentOrder);
+      // INITIAL DRIVER LOCATION
+
+      if (response.data.driver) {
+
+        setDriverLocation({
+
+          lat:
+            response.data.driver.latitude || 28.6139,
+
+          lng:
+            response.data.driver.longitude || 77.2090,
+        });
+      }
 
     } catch (error) {
 
       console.log(error);
 
+    } finally {
+
+      setLoading(false);
     }
   };
 
-  const steps = [
-    {
-      key: "pending",
-      title: "Order Placed",
-      icon: Package,
-    },
-    {
-      key: "confirmed",
-      title: "Restaurant Accepted",
-      icon: CheckCircle2,
-    },
-    {
-      key: "preparing",
-      title: "Preparing Food",
-      icon: ChefHat,
-    },
-    {
-      key: "out_for_delivery",
-      title: "Out For Delivery",
-      icon: Bike,
-    },
-    {
-      key: "delivered",
-      title: "Delivered",
-      icon: MapPin,
-    },
-  ];
+  // DELIVERY STEP STATUS
 
-  const currentStepIndex =
-    steps.findIndex(
-      (step) => step.key === order?.status
+  const getStepStatus = (step) => {
+
+    const current =
+      order?.delivery_status;
+
+    const steps = [
+
+      "waiting_for_driver",
+
+      "driver_assigned",
+
+      "picked_up",
+
+      "on_the_way",
+
+      "delivered"
+    ];
+
+    return (
+      steps.indexOf(current) >=
+      steps.indexOf(step)
     );
+  };
 
-  if (!order) {
+  // LOADING SCREEN
+
+  if (loading || !order) {
 
     return (
 
       <div className="
         min-h-screen
         bg-[#070b14]
-        text-white
         flex
         items-center
         justify-center
-        text-3xl
+        text-white
+        text-4xl
         font-black
       ">
-        Loading Tracking...
+
+        Tracking Order...
+
       </div>
     );
   }
@@ -124,140 +205,443 @@ function TrackOrder() {
       text-white
       px-5
       lg:px-10
-      py-8
+      py-10
     ">
 
       <div className="
-        max-w-[1100px]
+        max-w-[1200px]
         mx-auto
       ">
 
-        {/* TOP */}
+        {/* HEADER */}
+
+        <div className="mb-10">
+
+          <p className="
+            text-orange-400
+            font-semibold
+            mb-3
+          ">
+            LIVE ORDER TRACKING
+          </p>
+
+          <h1 className="
+            text-5xl
+            font-black
+            mb-4
+          ">
+            Order #{order.order_id}
+          </h1>
+
+          <p className="
+            text-gray-400
+            text-lg
+          ">
+            Real-time delivery updates
+          </p>
+
+        </div>
+
+        {/* STATUS CARD */}
 
         <div className="
-          flex
-          items-center
-          gap-4
-          mb-10
+          bg-white/[0.03]
+          border
+          border-white/10
+          rounded-[35px]
+          p-8
+          mb-8
         ">
 
-          <button
-            onClick={() => navigate(-1)}
-            className="
-              w-12
-              h-12
-              rounded-2xl
-              bg-white/5
-              border
-              border-white/10
+          <div className="
+            flex
+            flex-col
+            lg:flex-row
+            lg:items-center
+            lg:justify-between
+            gap-8
+          ">
+
+            <div>
+
+              <p className="
+                text-gray-400
+                mb-2
+              ">
+                Delivery Status
+              </p>
+
+              <h2 className="
+                text-5xl
+                font-black
+                capitalize
+              ">
+
+                {
+                  order.delivery_status
+                    ?.replaceAll("_", " ")
+                }
+
+              </h2>
+
+            </div>
+
+            <div className="
               flex
               items-center
-              justify-center
-            "
-          >
-
-            <ArrowLeft size={20} />
-
-          </button>
-
-          <div>
-
-            <h1 className="
-              text-5xl
-              font-black
+              gap-4
             ">
-              Track Order
-            </h1>
 
-            <p className="
-              text-gray-400
-              mt-2
-            ">
-              Order #{order.id}
-            </p>
+              <div className="
+                w-16
+                h-16
+                rounded-3xl
+                bg-orange-500/10
+                flex
+                items-center
+                justify-center
+              ">
+
+                <Clock3
+                  className="
+                    text-orange-400
+                  "
+                />
+
+              </div>
+
+              <div>
+
+                <p className="
+                  text-gray-400
+                ">
+                  ETA
+                </p>
+
+                <h2 className="
+                  text-4xl
+                  font-black
+                ">
+
+                  {
+                    order.estimated_delivery_time
+                  } mins
+
+                </h2>
+
+              </div>
+
+            </div>
 
           </div>
 
         </div>
 
-        {/* HERO CARD */}
+        {/* LIVE MAP */}
 
-        <div className="
-          relative
-          overflow-hidden
-          rounded-[40px]
-          border
-          border-white/10
-          bg-white/[0.03]
-          backdrop-blur-2xl
-          p-8
-        ">
-
-          {/* GLOW */}
-
-          <div className="
-            absolute
-            top-[-100px]
-            right-[-100px]
-            w-[300px]
-            h-[300px]
-            rounded-full
-            bg-orange-500/20
-            blur-[120px]
-          " />
-
-          <div className="relative z-10">
-
-            {/* STATUS */}
+        {
+          driverLocation && (
 
             <div className="
-              flex
-              items-center
-              justify-between
-              flex-wrap
-              gap-5
+              mb-8
             ">
 
-              <div>
+              <div className="
+                flex
+                items-center
+                gap-4
+                mb-5
+              ">
 
-                <p className="
-                  text-sm
-                  text-gray-400
-                  mb-3
-                ">
-                  Current Status
-                </p>
+                <MapPin
+                  className="
+                    text-orange-400
+                  "
+                />
 
                 <h2 className="
-                  text-5xl
+                  text-3xl
                   font-black
-                  capitalize
                 ">
-                  {order.status.replaceAll(
-                    "_",
-                    " "
-                  )}
+                  Live Delivery Map
+                </h2>
+
+              </div>
+
+              <LiveTrackingMap
+
+                driverLocation={
+                  driverLocation
+                }
+
+                customerLocation={{
+                  lat: 28.6139,
+                  lng: 77.2090,
+                }}
+
+                restaurantLocation={{
+                  lat: 28.6229,
+                  lng: 77.2195,
+                }}
+              />
+
+            </div>
+          )
+        }
+
+        {/* DELIVERY TIMELINE */}
+
+        <div className="
+          bg-white/[0.03]
+          border
+          border-white/10
+          rounded-[35px]
+          p-8
+          mb-8
+        ">
+
+          <h2 className="
+            text-3xl
+            font-black
+            mb-8
+          ">
+            Delivery Progress
+          </h2>
+
+          <div className="
+            space-y-8
+          ">
+
+            {
+              [
+                {
+                  key:
+                    "waiting_for_driver",
+                  label:
+                    "Waiting for driver"
+                },
+
+                {
+                  key:
+                    "driver_assigned",
+                  label:
+                    "Driver assigned"
+                },
+
+                {
+                  key:
+                    "picked_up",
+                  label:
+                    "Order picked up"
+                },
+
+                {
+                  key:
+                    "on_the_way",
+                  label:
+                    "On the way"
+                },
+
+                {
+                  key:
+                    "delivered",
+                  label:
+                    "Delivered"
+                }
+
+              ].map((step) => (
+
+                <div
+                  key={step.key}
+                  className="
+                    flex
+                    items-center
+                    gap-5
+                  "
+                >
+
+                  <div className={`
+                    w-12
+                    h-12
+                    rounded-full
+                    flex
+                    items-center
+                    justify-center
+
+                    ${
+                      getStepStatus(
+                        step.key
+                      )
+                      ? "bg-green-500"
+                      : "bg-white/10"
+                    }
+                  `}>
+
+                    <CheckCircle2 size={20} />
+
+                  </div>
+
+                  <div>
+
+                    <h3 className="
+                      text-xl
+                      font-bold
+                    ">
+                      {step.label}
+                    </h3>
+
+                  </div>
+
+                </div>
+              ))
+            }
+
+          </div>
+
+        </div>
+
+        {/* DRIVER DETAILS */}
+
+        {
+          order.driver && (
+
+            <div className="
+              bg-white/[0.03]
+              border
+              border-white/10
+              rounded-[35px]
+              p-8
+            ">
+
+              <div className="
+                flex
+                items-center
+                gap-4
+                mb-8
+              ">
+
+                <Bike
+                  className="
+                    text-orange-400
+                  "
+                />
+
+                <h2 className="
+                  text-3xl
+                  font-black
+                ">
+                  Driver Details
                 </h2>
 
               </div>
 
               <div className="
-                px-6
-                py-4
-                rounded-2xl
+                grid
+                grid-cols-1
+                md:grid-cols-2
+                gap-6
+              ">
+
+                <div>
+
+                  <p className="
+                    text-gray-400
+                    mb-2
+                  ">
+                    Driver Name
+                  </p>
+
+                  <h3 className="
+                    text-2xl
+                    font-black
+                  ">
+                    {
+                      order.driver.full_name
+                    }
+                  </h3>
+
+                </div>
+
+                <div>
+
+                  <p className="
+                    text-gray-400
+                    mb-2
+                  ">
+                    Phone
+                  </p>
+
+                  <h3 className="
+                    text-2xl
+                    font-black
+                  ">
+                    {
+                      order.driver.phone
+                    }
+                  </h3>
+
+                </div>
+
+                <div>
+
+                  <p className="
+                    text-gray-400
+                    mb-2
+                  ">
+                    Vehicle
+                  </p>
+
+                  <h3 className="
+                    text-2xl
+                    font-black
+                  ">
+                    {
+                      order.driver.vehicle_type
+                    }
+                  </h3>
+
+                </div>
+
+                <div>
+
+                  <p className="
+                    text-gray-400
+                    mb-2
+                  ">
+                    Vehicle Number
+                  </p>
+
+                  <h3 className="
+                    text-2xl
+                    font-black
+                  ">
+                    {
+                      order.driver.vehicle_number
+                    }
+                  </h3>
+
+                </div>
+
+              </div>
+
+              {/* LIVE COORDINATES */}
+
+              <div className="
+                mt-8
                 bg-orange-500/10
                 border
                 border-orange-500/20
+                rounded-3xl
+                p-6
               ">
 
                 <div className="
                   flex
                   items-center
-                  gap-3
+                  gap-4
                 ">
 
-                  <Clock3
-                    size={20}
+                  <MapPin
                     className="
                       text-orange-400
                     "
@@ -266,18 +650,26 @@ function TrackOrder() {
                   <div>
 
                     <p className="
-                      text-sm
-                      text-gray-400
+                      text-orange-300
+                      font-semibold
                     ">
-                      Estimated Delivery
+                      Live Driver Coordinates
                     </p>
 
                     <h3 className="
-                      text-2xl
+                      text-xl
                       font-black
-                      text-orange-400
+                      mt-1
                     ">
-                      {order.estimated_delivery_time} mins
+
+                      {
+                        driverLocation?.lat
+                      },
+
+                      {
+                        driverLocation?.lng
+                      }
+
                     </h3>
 
                   </div>
@@ -287,125 +679,8 @@ function TrackOrder() {
               </div>
 
             </div>
-
-            {/* TIMELINE */}
-
-            <div className="
-              mt-16
-              relative
-            ">
-
-              {/* LINE */}
-
-              <div className="
-                absolute
-                top-7
-                left-0
-                w-full
-                h-[3px]
-                bg-white/10
-              " />
-
-              <div className="
-                absolute
-                top-7
-                left-0
-                h-[3px]
-                bg-orange-500
-                transition-all
-                duration-700
-              "
-              style={{
-                width: `${
-                  (
-                    currentStepIndex /
-                    (steps.length - 1)
-                  ) * 100
-                }%`,
-              }}
-              />
-
-              <div className="
-                relative
-                grid
-                grid-cols-5
-                gap-5
-              ">
-
-                {
-                  steps.map(
-                    (
-                      step,
-                      index
-                    ) => {
-
-                      const Icon =
-                        step.icon;
-
-                      const active =
-                        index <= currentStepIndex;
-
-                      return (
-
-                        <div
-                          key={step.key}
-                          className="
-                            flex
-                            flex-col
-                            items-center
-                            text-center
-                          "
-                        >
-
-                          <div className={`
-                            w-14
-                            h-14
-                            rounded-full
-                            flex
-                            items-center
-                            justify-center
-                            border
-                            transition-all
-                            duration-500
-                            ${
-                              active
-                              ? "bg-orange-500 border-orange-400 shadow-[0_0_40px_rgba(249,115,22,0.6)]"
-                              : "bg-[#111827] border-white/10"
-                            }
-                          `}>
-
-                            <Icon size={22} />
-
-                          </div>
-
-                          <p className={`
-                            mt-4
-                            text-sm
-                            font-semibold
-                            ${
-                              active
-                              ? "text-white"
-                              : "text-gray-500"
-                            }
-                          `}>
-
-                            {step.title}
-
-                          </p>
-
-                        </div>
-                      );
-                    }
-                  )
-                }
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
+          )
+        }
 
       </div>
 

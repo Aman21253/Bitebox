@@ -8,6 +8,10 @@ import {
   Clock3,
 } from "lucide-react";
 
+import {
+  useState,
+} from "react";
+
 import API from "../../api/axios";
 
 import {
@@ -21,6 +25,14 @@ function Checkout() {
   const {
     cart,
   } = useCart();
+
+  const [address, setAddress] =
+    useState(
+      "Sector 21, Delhi"
+    );
+
+  const [loading, setLoading] =
+    useState(false);
 
   const subtotal =
     cart?.total_amount || 0;
@@ -36,21 +48,109 @@ function Checkout() {
     deliveryFee +
     taxes;
 
-  const placeOrder = async () => {
+  // PAYMENT
+
+  const handlePayment = async () => {
 
     try {
 
-      const response = await API.post(
-        "/orders/create",
-        {
-          delivery_address:
-            "Sector 21, Delhi",
-        }
-      );
+      setLoading(true);
 
-      navigate(
-        `/order-success/${response.data.order_id}`
-      );
+      // CREATE PAYMENT ORDER
+
+      const response =
+        await API.post(
+          "/payments/create-order"
+        );
+
+      const data = response.data;
+
+      // RAZORPAY OPTIONS
+
+      const options = {
+
+        key: data.key,
+
+        amount: data.amount,
+
+        currency: "INR",
+
+        name: "BiteBox",
+
+        description:
+          "Food Order Payment",
+
+        order_id:
+          data.razorpay_order_id,
+
+        theme: {
+          color: "#f97316",
+        },
+
+        handler: async (
+          paymentResponse
+        ) => {
+
+          try {
+
+            // VERIFY PAYMENT
+
+            await API.post(
+              "/payments/verify",
+              paymentResponse
+            );
+
+            // CREATE ORDER
+
+            const orderResponse =
+              await API.post(
+                "/orders/create",
+                {
+                  delivery_address:
+                    address,
+                }
+              );
+
+            // SUCCESS
+
+            navigate(
+
+              `/order-success/${orderResponse.data.order_id}`
+
+            );
+
+          } catch (error) {
+
+            console.log(error);
+
+            alert(
+              "Payment verification failed"
+            );
+          }
+        },
+
+        modal: {
+
+          ondismiss: () => {
+
+            setLoading(false);
+
+            alert(
+              "Payment cancelled"
+            );
+          }
+        }
+
+      };
+
+      // OPEN PAYMENT WINDOW
+
+      const razorpay =
+        new window.Razorpay(
+          options
+        );
+
+      razorpay.open();
 
     } catch (error) {
 
@@ -58,8 +158,12 @@ function Checkout() {
 
       alert(
         error.response?.data?.detail ||
-        "Failed to place order"
+        "Payment failed"
       );
+
+    } finally {
+
+      setLoading(false);
     }
   };
 
@@ -165,7 +269,12 @@ function Checkout() {
 
               <textarea
                 placeholder="Enter delivery address..."
-                defaultValue="Sector 21, Delhi"
+                value={address}
+                onChange={(e) =>
+                  setAddress(
+                    e.target.value
+                  )
+                }
                 className="
                   w-full
                   h-[140px]
@@ -262,7 +371,7 @@ function Checkout() {
                     text-xl
                     font-bold
                   ">
-                    Cash On Delivery
+                    Razorpay
                   </h3>
 
                 </div>
@@ -413,10 +522,11 @@ function Checkout() {
 
               </div>
 
-              {/* BUTTON */}
+              {/* PAYMENT BUTTON */}
 
               <button
-                onClick={placeOrder}
+                onClick={handlePayment}
+                disabled={loading}
                 className="
                   w-full
                   h-16
@@ -430,9 +540,16 @@ function Checkout() {
                   font-black
                   shadow-lg
                   shadow-orange-500/20
+                  disabled:opacity-50
                 "
               >
-                Place Order
+
+                {
+                  loading
+                    ? "Processing..."
+                    : `Pay ₹${total}`
+                }
+
               </button>
 
             </div>

@@ -1,5 +1,13 @@
-import { Star } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+// FILE: src/components/customer/RestaurantCard.jsx
+
+import {
+  Star,
+  Clock3,
+} from "lucide-react";
+
+import {
+  useNavigate,
+} from "react-router-dom";
 
 function RestaurantCard({ restaurant }) {
 
@@ -9,106 +17,194 @@ function RestaurantCard({ restaurant }) {
 
     <div
       onClick={() =>
-        navigate(`/restaurants/${restaurant.id}`)
+        navigate(
+          `/restaurants/${restaurant.id}`
+        )
       }
       className="
-        bg-white
-        rounded-2xl
+        group
+        bg-white/[0.03]
+        backdrop-blur-xl
+        rounded-[30px]
         overflow-hidden
         border
-        border-gray-200
-        hover:shadow-2xl
+        border-white/10
+        hover:border-orange-500/40
         transition-all
-        duration-300
-        hover:-translate-y-1
+        duration-500
+        hover:-translate-y-3
+        hover:shadow-[0_20px_90px_rgba(249,115,22,0.18)]
         cursor-pointer
+        h-full
       "
     >
 
-      <img
-        src={
-          restaurant.image_url ||
-          "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200&auto=format&fit=crop"
-        }
-        alt={restaurant.name}
-        className="
-          w-full
-          h-[230px]
-          object-cover
-        "
-      />
+      {/* IMAGE */}
 
-      <div className="p-5">
+      <div className="
+        relative
+        overflow-hidden
+      ">
+
+        <img
+          src={
+            restaurant.image_url ||
+            "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200&auto=format&fit=crop"
+          }
+          alt={restaurant.name}
+          className="
+            w-full
+            h-[250px]
+            object-cover
+            transition-transform
+            duration-700
+            group-hover:scale-110
+          "
+        />
+
+        {/* OVERLAY */}
 
         <div className="
+          absolute
+          inset-0
+          bg-gradient-to-t
+          from-black/80
+          via-black/10
+          to-transparent
+        " />
+
+        {/* RATING */}
+
+        <div className="
+          absolute
+          top-4
+          right-4
+          bg-orange-500/20
+          backdrop-blur-xl
+          border
+          border-orange-400/20
+          text-orange-300
+          px-3
+          py-1.5
+          rounded-2xl
+          text-sm
+          font-semibold
           flex
-          items-start
-          justify-between
+          items-center
+          gap-1
         ">
 
-          <div>
+          <Star
+            size={14}
+            fill="currentColor"
+          />
 
-            <h3 className="
-              text-2xl
-              font-bold
-              text-gray-900
-            ">
-              {restaurant.name}
-            </h3>
-
-            <p className="
-              text-gray-500
-              mt-1
-            ">
-              {restaurant.cuisine}
-            </p>
-
-          </div>
-
-          <div className="
-            bg-green-500
-            text-white
-            px-2
-            py-1
-            rounded-lg
-            text-sm
-            font-semibold
-            flex
-            items-center
-            gap-1
-          ">
-
-            <Star
-              size={14}
-              fill="white"
-            />
-
-            {restaurant.rating}
-
-          </div>
+          {restaurant.rating || "4.5"}
 
         </div>
+
+        {/* DELIVERY TAG */}
+
+        <div className="
+          absolute
+          bottom-4
+          left-4
+          bg-black/40
+          backdrop-blur-xl
+          border
+          border-white/10
+          px-3
+          py-2
+          rounded-2xl
+          flex
+          items-center
+          gap-2
+        ">
+
+          <Clock3
+            size={14}
+            className="
+              text-orange-400
+            "
+          />
+
+          <p className="
+            text-sm
+            font-semibold
+            text-white
+          ">
+            {restaurant.delivery_time}
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* CONTENT */}
+
+      <div className="
+        p-6
+        flex
+        flex-col
+        gap-5
+      ">
+
+        {/* NAME */}
+
+        <div>
+
+          <h2 className="
+            text-2xl
+            font-black
+            leading-tight
+            text-white
+            break-words
+          ">
+            {restaurant.name}
+          </h2>
+
+          <p className="
+            text-gray-400
+            mt-2
+            text-base
+            break-words
+          ">
+            {restaurant.cuisine}
+          </p>
+
+        </div>
+
+        {/* FOOTER */}
 
         <div className="
           flex
           items-center
           justify-between
-          mt-4
+          gap-4
         ">
 
-          <p className="
-            text-gray-700
-            font-medium
+          <div className="
+            flex
+            items-center
+            gap-2
+            text-gray-300
+            text-sm
           ">
-            ⏱ {restaurant.delivery_time}
-          </p>
 
-          <p className="
-            text-orange-500
-            font-semibold
+            🚚 Fast Delivery
+
+          </div>
+
+          <div className="
+            text-orange-400
+            font-black
+            text-lg
+            shrink-0
           ">
-            ₹{restaurant.delivery_fee} delivery
-          </p>
+
+            ₹{restaurant.delivery_fee}
+
+          </div>
 
         </div>
 

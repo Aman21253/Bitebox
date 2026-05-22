@@ -6,60 +6,67 @@ import {
 } from "react-router-dom";
 
 import API from "../../api/axios";
-
 import AuthLayout from "../../layouts/AuthLayout";
-
 import Input from "../../components/ui/Input";
-
 import Button from "../../components/ui/Button";
 
 function Login() {
 
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] =
+    useState({
+      email: "",
+      password: "",
+    });
 
   const handleChange = (e) => {
 
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]:
+        e.target.value,
     });
   };
 
   const handleSubmit = async (e) => {
 
     e.preventDefault();
-
     try {
-
       setLoading(true);
+      const response =
+        await API.post(
+          "/auth/login",
+          formData
+        );
 
-      const response = await API.post(
-        "/auth/login",
-        formData
-      );
-
+      // SAVE TOKEN
       localStorage.setItem(
         "access_token",
         response.data.access_token
       );
 
+      // SAVE USER
       localStorage.setItem(
         "user",
-        JSON.stringify(response.data.user)
+        JSON.stringify(
+          response.data.user
+        )
       );
 
-      // ROLE BASED REDIRECTION
+      const role =
+        response.data.user.role;
 
-      if (
-        response.data.user.role ===
-        "restaurant"
+      // ROLE BASED REDIRECT
+      if (role === "driver") {
+        navigate(
+          "/driver/dashboard"
+        );
+      } else if (
+        role === "restaurant"
       ) {
 
         navigate(
@@ -74,7 +81,8 @@ function Login() {
     } catch (error) {
 
       alert(
-        error.response?.data?.detail ||
+        error.response?.data
+          ?.detail ||
         "Login failed"
       );
 
@@ -129,7 +137,8 @@ function Login() {
             mt-4
             text-lg
           ">
-            Continue your premium food journey.
+            Continue your premium
+            food journey.
           </p>
 
         </div>
@@ -138,7 +147,9 @@ function Login() {
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-5"
+          className="
+            space-y-5
+          "
         >
 
           <Input

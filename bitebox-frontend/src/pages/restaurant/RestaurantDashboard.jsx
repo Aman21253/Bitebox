@@ -2,9 +2,17 @@ import {
   ShoppingBag,
   IndianRupee,
   Clock3,
- Bike,
+  Bike,
   Bell,
+  UtensilsCrossed,
 } from "lucide-react";
+
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import API from "../../api/axios";
 
 import RestaurantSidebar from "../../components/restaurant/RestaurantSidebar";
 
@@ -14,47 +22,101 @@ function RestaurantDashboard() {
     localStorage.getItem("user")
   );
 
-  const stats = [
+  const [stats, setStats] =
+    useState(null);
+
+  const [recentOrders, setRecentOrders] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  useEffect(() => {
+
+    fetchDashboardData();
+
+  }, []);
+
+  const fetchDashboardData = async () => {
+
+    try {
+
+      const [
+        statsResponse,
+        ordersResponse
+      ] = await Promise.all([
+
+        API.get(
+          "/restaurant/dashboard/stats"
+        ),
+
+        API.get(
+          "/restaurant/dashboard/recent-orders"
+        )
+      ]);
+
+      setStats(
+        statsResponse.data
+      );
+
+      setRecentOrders(
+        ordersResponse.data
+      );
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+
+    return (
+
+      <div className="
+        min-h-screen
+        bg-[#070b14]
+        flex
+        items-center
+        justify-center
+        text-white
+        text-4xl
+        font-black
+      ">
+        Loading Dashboard...
+      </div>
+    );
+  }
+
+  const dashboardStats = [
     {
-      title: "Today's Orders",
-      value: "48",
+      title: "Total Orders",
+      value: stats?.total_orders || 0,
       icon: ShoppingBag,
     },
     {
       title: "Revenue",
-      value: "₹12,480",
+      value: `₹${stats?.total_revenue || 0}`,
       icon: IndianRupee,
     },
     {
       title: "Preparing",
-      value: "9",
+      value: stats?.preparing_orders || 0,
       icon: Clock3,
     },
     {
       title: "Active Deliveries",
-      value: "5",
+      value: stats?.active_deliveries || 0,
       icon: Bike,
     },
-  ];
-
-  const recentOrders = [
     {
-      id: 1024,
-      customer: "Rahul Sharma",
-      amount: "₹420",
-      status: "Preparing",
-    },
-    {
-      id: 1025,
-      customer: "Priya Verma",
-      amount: "₹299",
-      status: "Pending",
-    },
-    {
-      id: 1026,
-      customer: "Aman Gupta",
-      amount: "₹580",
-      status: "Out For Delivery",
+      title: "Menu Items",
+      value: stats?.total_menu_items || 0,
+      icon: UtensilsCrossed,
     },
   ];
 
@@ -67,11 +129,7 @@ function RestaurantDashboard() {
       flex
     ">
 
-      {/* REUSABLE SIDEBAR */}
-
       <RestaurantSidebar />
-
-      {/* MAIN */}
 
       <div className="
         flex-1
@@ -129,8 +187,6 @@ function RestaurantDashboard() {
               flex
               items-center
               justify-center
-              hover:bg-white/10
-              transition
             ">
 
               <Bell size={22} />
@@ -145,13 +201,13 @@ function RestaurantDashboard() {
             grid
             grid-cols-1
             md:grid-cols-2
-            xl:grid-cols-4
+            xl:grid-cols-5
             gap-8
             mb-14
           ">
 
             {
-              stats.map((stat) => {
+              dashboardStats.map((stat) => {
 
                 const Icon = stat.icon;
 
@@ -242,8 +298,6 @@ function RestaurantDashboard() {
             p-2
           ">
 
-            {/* HEADER */}
-
             <div className="
               px-8
               py-7
@@ -260,13 +314,9 @@ function RestaurantDashboard() {
 
             </div>
 
-            {/* TABLE */}
-
             <div className="overflow-x-auto">
 
-              <table className="
-                w-full
-              ">
+              <table className="w-full">
 
                 <thead>
 
@@ -289,7 +339,7 @@ function RestaurantDashboard() {
                       py-6
                       text-gray-400
                     ">
-                      Customer
+                      Amount
                     </th>
 
                     <th className="
@@ -297,7 +347,7 @@ function RestaurantDashboard() {
                       py-6
                       text-gray-400
                     ">
-                      Amount
+                      Payment
                     </th>
 
                     <th className="
@@ -322,8 +372,6 @@ function RestaurantDashboard() {
                         className="
                           border-b
                           border-white/5
-                          hover:bg-white/[0.02]
-                          transition
                         "
                       >
 
@@ -338,17 +386,18 @@ function RestaurantDashboard() {
                         <td className="
                           px-8
                           py-6
+                          text-orange-400
+                          font-semibold
                         ">
-                          {order.customer}
+                          ₹{order.total_amount}
                         </td>
 
                         <td className="
                           px-8
                           py-6
-                          font-semibold
-                          text-orange-400
+                          capitalize
                         ">
-                          {order.amount}
+                          {order.payment_status}
                         </td>
 
                         <td className="
@@ -366,6 +415,7 @@ function RestaurantDashboard() {
                             text-orange-300
                             text-sm
                             font-semibold
+                            capitalize
                           ">
 
                             {order.status}

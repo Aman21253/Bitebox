@@ -100,22 +100,25 @@ function MyOrders() {
       bg-[#070b14]
       text-white
       px-5
-      lg:px-10
+      md:px-8
+      xl:px-12
       py-8
     ">
 
       {/* TOP */}
 
       <div className="
-        max-w-[1600px]
+        max-w-[1700px]
         mx-auto
       ">
+
+        {/* HEADER */}
 
         <div className="
           flex
           items-center
           gap-4
-          mb-12
+          mb-14
         ">
 
           <button
@@ -131,7 +134,9 @@ function MyOrders() {
               items-center
               justify-center
               hover:bg-white/10
-              transition
+              transition-all
+              duration-300
+              shrink-0
             "
           >
 
@@ -142,7 +147,8 @@ function MyOrders() {
           <div>
 
             <h1 className="
-              text-5xl
+              text-4xl
+              md:text-5xl
               font-black
               tracking-tight
             ">
@@ -152,6 +158,8 @@ function MyOrders() {
             <p className="
               text-gray-400
               mt-2
+              text-sm
+              md:text-base
             ">
               Track and manage all your orders
             </p>
@@ -193,6 +201,7 @@ function MyOrders() {
                 text-gray-400
                 max-w-[500px]
                 text-lg
+                leading-relaxed
               ">
                 Your delicious journey starts here.
                 Explore restaurants and place your
@@ -210,7 +219,8 @@ function MyOrders() {
                   rounded-2xl
                   font-bold
                   text-lg
-                  transition
+                  transition-all
+                  duration-300
                 "
               >
                 Explore Restaurants
@@ -227,6 +237,7 @@ function MyOrders() {
           grid-cols-1
           xl:grid-cols-2
           gap-8
+          xl:gap-10
         ">
 
           {
@@ -238,8 +249,7 @@ function MyOrders() {
                   bg-white/[0.03]
                   border
                   border-white/10
-                  rounded-[32px]
-                  overflow-hidden
+                  rounded-[28px]
                   hover:border-orange-500/30
                   hover:-translate-y-1
                   hover:shadow-[0_20px_80px_rgba(249,115,22,0.12)]
@@ -251,13 +261,15 @@ function MyOrders() {
                 {/* HEADER */}
 
                 <div className="
-                  p-7
+                  p-6
+                  xl:p-7
                   border-b
                   border-white/10
                   flex
                   items-start
                   justify-between
                   gap-5
+                  flex-wrap
                 ">
 
                   <div>
@@ -272,6 +284,7 @@ function MyOrders() {
 
                     <h2 className="
                       text-3xl
+                      md:text-4xl
                       font-black
                     ">
                       #{order.id}
@@ -287,6 +300,7 @@ function MyOrders() {
                     text-sm
                     font-bold
                     capitalize
+                    shrink-0
                     ${getStatusColor(order.status)}
                   `}>
 
@@ -299,7 +313,8 @@ function MyOrders() {
                 {/* BODY */}
 
                 <div className="
-                  p-7
+                  p-6
+                  xl:p-7
                 ">
 
                   {/* STATS */}
@@ -307,7 +322,7 @@ function MyOrders() {
                   <div className="
                     grid
                     grid-cols-1
-                    sm:grid-cols-3
+                    md:grid-cols-3
                     gap-5
                   ">
 
@@ -319,6 +334,7 @@ function MyOrders() {
                       border-white/10
                       rounded-2xl
                       p-5
+                      min-h-[140px]
                     ">
 
                       <div className="
@@ -348,6 +364,7 @@ function MyOrders() {
                         text-3xl
                         font-black
                         text-orange-400
+                        break-words
                       ">
                         ₹{order.total_amount}
                       </h3>
@@ -362,6 +379,7 @@ function MyOrders() {
                       border-white/10
                       rounded-2xl
                       p-5
+                      min-h-[140px]
                     ">
 
                       <div className="
@@ -404,6 +422,7 @@ function MyOrders() {
                       border-white/10
                       rounded-2xl
                       p-5
+                      min-h-[140px]
                     ">
 
                       <div className="
@@ -430,11 +449,17 @@ function MyOrders() {
                       </div>
 
                       <h3 className="
-                        text-lg
+                        text-base
+                        xl:text-lg
                         font-bold
                         capitalize
+                        break-words
+                        leading-relaxed
                       ">
-                        {order.delivery_status}
+                        {
+                          order.delivery_status
+                            ?.replaceAll("_", " ")
+                        }
                       </h3>
 
                     </div>
@@ -478,6 +503,7 @@ function MyOrders() {
                     <p className="
                       text-lg
                       leading-relaxed
+                      break-words
                     ">
                       {order.delivery_address}
                     </p>
@@ -488,8 +514,11 @@ function MyOrders() {
 
                   <div className="
                     flex
-                    items-center
+                    flex-col
+                    md:flex-row
+                    md:items-center
                     justify-between
+                    gap-5
                     mt-8
                   ">
 
@@ -506,6 +535,7 @@ function MyOrders() {
                       <p className="
                         font-bold
                         capitalize
+                        text-lg
                       ">
                         {order.payment_status}
                       </p>
@@ -513,7 +543,11 @@ function MyOrders() {
                     </div>
 
                     <button
-                        onClick={() => navigate(`/track-order/${order.id}`)}
+                      onClick={() =>
+                        navigate(
+                          `/track-order/${order.id}`
+                        )
+                      }
                       className="
                         bg-orange-500
                         hover:bg-orange-400
@@ -521,19 +555,28 @@ function MyOrders() {
                         py-3
                         rounded-2xl
                         font-bold
-                        transition
+                        transition-all
+                        duration-300
+                        hover:scale-[1.02]
+                        w-full
+                        md:w-auto
                       "
                     >
                       Track Order
                     </button>
 
                   </div>
+
                 </div>
+
               </div>
             ))
           }
+
         </div>
+
       </div>
+
     </div>
   );
 }

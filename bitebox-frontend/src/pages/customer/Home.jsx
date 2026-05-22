@@ -1,5 +1,3 @@
-// FILE: src/pages/customer/Home.jsx
-
 import {
   Search,
   ShoppingCart,
@@ -155,13 +153,14 @@ function Home() {
 
         <div className="
           h-[78px]
-          px-5
+          px-4
+          md:px-6
           lg:px-10
           flex
           items-center
           justify-between
           gap-5
-          max-w-[1600px]
+          max-w-[1700px]
           mx-auto
         ">
 
@@ -226,7 +225,7 @@ function Home() {
             md:flex
             items-center
             w-full
-            max-w-[460px]
+            max-w-[500px]
             h-12
             px-5
             rounded-2xl
@@ -365,35 +364,34 @@ function Home() {
       {/* MAIN */}
 
       <div className="
-        px-6
-        lg:px-12
+        px-4
+        md:px-6
+        lg:px-10
         py-8
       ">
 
         {/* HERO */}
 
         <div className="
-          w-full
-          min-h-[calc(100vh-78px)]
-          mb-12
+          max-w-[1700px]
+          mx-auto
+          mb-16
         ">
 
-        <div className="
-          relative
-          overflow-hidden
-          rounded-[42px]
-          border
-          border-white/10
-          bg-[#0b1220]
-          min-h-[calc(100vh-120px)]
-          px-8
-          py-10
-          md:px-14
-          lg:px-20
-          lg:py-16
-          flex
-          items-center
-        ">
+          <div className="
+            relative
+            overflow-hidden
+            rounded-[40px]
+            border
+            border-white/10
+            bg-[#0b1220]
+            px-6
+            py-10
+            md:px-12
+            lg:px-16
+            xl:px-20
+            xl:py-20
+          ">
 
             {/* GLOW */}
 
@@ -425,15 +423,18 @@ function Home() {
               relative
               z-10
               grid
-              lg:grid-cols-[1.3fr_0.7fr]
-              gap-16
+              grid-cols-1
+              xl:grid-cols-[1.2fr_0.8fr]
+              gap-14
+              xl:gap-20
               items-center
-              h-full
             ">
 
               {/* LEFT */}
 
-              <div>
+              <div className="
+                max-w-[900px]
+              ">
 
                 <div className="
                   inline-flex
@@ -448,7 +449,7 @@ function Home() {
                   text-orange-300
                   text-sm
                   font-semibold
-                  mb-7
+                  mb-8
                 ">
 
                   <Sparkles size={16} />
@@ -458,13 +459,13 @@ function Home() {
                 </div>
 
                 <h1 className="
-                  text-[58px]
-                  sm:text-[78px]
-                  lg:text-[110px]
-                  leading-[0.95]
+                  text-[54px]
+                  sm:text-[72px]
+                  lg:text-[96px]
+                  xl:text-[110px]
+                  leading-[0.92]
                   font-black
                   tracking-[-3px]
-                  max-w-[900px]
                 ">
 
                   Premium
@@ -472,20 +473,24 @@ function Home() {
                   <span className="
                     block
                     text-orange-500
+                    mt-2
                   ">
                     food delivery
                   </span>
 
-                  experience
+                  <span className="block mt-2">
+                    experience
+                  </span>
 
                 </h1>
 
                 <p className="
-                  mt-7
+                  mt-8
                   text-gray-400
-                  text-[22px]
+                  text-lg
+                  md:text-[22px]
                   leading-relaxed
-                  max-w-[580px]
+                  max-w-[620px]
                 ">
                   Discover top-rated restaurants,
                   lightning-fast delivery, and a
@@ -497,7 +502,7 @@ function Home() {
                   flex
                   flex-wrap
                   gap-4
-                  mt-7
+                  mt-9
                 ">
 
                   <button className="
@@ -507,7 +512,7 @@ function Home() {
                     transition-all
                     duration-300
                     px-7
-                    py-3.5
+                    py-4
                     rounded-2xl
                     font-bold
                     text-base
@@ -524,7 +529,7 @@ function Home() {
                     transition-all
                     duration-300
                     px-7
-                    py-3.5
+                    py-4
                     rounded-2xl
                     font-semibold
                     text-gray-300
@@ -541,18 +546,19 @@ function Home() {
               <div className="
                 flex
                 justify-center
-                lg:justify-end
+                xl:justify-end
               ">
 
                 <div className="
                   w-full
-                  max-w-[420px]
+                  max-w-[430px]
                   bg-white/[0.05]
                   backdrop-blur-2xl
                   border
                   border-white/10
                   rounded-[34px]
-                  p-6
+                  p-7
+                  xl:p-8
                   shadow-[0_20px_70px_rgba(0,0,0,0.35)]
                 ">
 
@@ -560,7 +566,7 @@ function Home() {
                     flex
                     items-center
                     justify-between
-                    mb-6
+                    mb-7
                   ">
 
                     <div className="
@@ -599,7 +605,8 @@ function Home() {
                   </div>
 
                   <h2 className="
-                    text-4xl
+                    text-3xl
+                    md:text-4xl
                     font-black
                     leading-tight
                   ">
@@ -607,10 +614,11 @@ function Home() {
                   </h2>
 
                   <p className="
-                    mt-3
+                    mt-4
                     text-gray-400
                     leading-relaxed
                     text-sm
+                    md:text-base
                   ">
                     Fast, secure and premium
                     delivery service at your
@@ -629,7 +637,7 @@ function Home() {
                       border
                       border-white/10
                       rounded-3xl
-                      p-4
+                      p-5
                     ">
 
                       <p className="
@@ -640,7 +648,7 @@ function Home() {
                       </p>
 
                       <p className="
-                        mt-1
+                        mt-2
                         text-gray-400
                         text-xs
                       ">
@@ -654,7 +662,7 @@ function Home() {
                       border
                       border-white/10
                       rounded-3xl
-                      p-4
+                      p-5
                     ">
 
                       <p className="
@@ -665,7 +673,7 @@ function Home() {
                       </p>
 
                       <p className="
-                        mt-1
+                        mt-2
                         text-gray-400
                         text-xs
                       ">
@@ -677,7 +685,7 @@ function Home() {
                   </div>
 
                   <div className="
-                    mt-6
+                    mt-7
                     flex
                     items-center
                     gap-2
@@ -708,25 +716,24 @@ function Home() {
 
         </div>
 
-        <div className="h-6" />
-
         {/* CATEGORIES */}
 
         <div className="
-          max-w-[1600px]
+          max-w-[1700px]
           mx-auto
-          mb-14
+          mb-16
         ">
 
           <div className="
             flex
             items-center
             justify-between
-            mb-7
+            mb-8
           ">
 
             <h2 className="
-              text-[36px]
+              text-[34px]
+              md:text-[40px]
               font-black
               tracking-tight
             ">
@@ -768,7 +775,7 @@ function Home() {
                     border
                     border-white/10
                     rounded-[28px]
-                    h-[115px]
+                    h-[120px]
                     flex
                     flex-col
                     items-center
@@ -808,21 +815,23 @@ function Home() {
         {/* RESTAURANTS */}
 
         <div className="
-          max-w-[1600px]
+          max-w-[1700px]
           mx-auto
+          pb-16
         ">
 
           <div className="
             flex
             items-center
             justify-between
-            mb-8
+            mb-10
           ">
 
             <div>
 
               <h2 className="
-                text-[36px]
+                text-[34px]
+                md:text-[40px]
                 font-black
                 tracking-tight
               ">
@@ -832,6 +841,7 @@ function Home() {
               <p className="
                 text-gray-400
                 mt-2
+                text-base
               ">
                 Handpicked restaurants for you
               </p>
@@ -859,8 +869,8 @@ function Home() {
             grid-cols-1
             sm:grid-cols-2
             lg:grid-cols-3
-            xl:grid-cols-4
-            gap-7
+            2xl:grid-cols-4
+            gap-8
           ">
 
             {
@@ -904,7 +914,7 @@ function Home() {
                       alt={restaurant.name}
                       className="
                         w-full
-                        h-[220px]
+                        h-[240px]
                         object-cover
                         transition-transform
                         duration-700
@@ -951,13 +961,14 @@ function Home() {
 
                   </div>
 
-                  <div className="p-5">
+                  <div className="p-6">
 
                     <h3 className="
-                      text-xl
+                      text-2xl
                       font-bold
                       text-white
                       leading-tight
+                      break-words
                     ">
                       {restaurant.name}
                     </h3>
@@ -965,6 +976,7 @@ function Home() {
                     <p className="
                       text-gray-400
                       mt-2
+                      break-words
                     ">
                       {restaurant.cuisine}
                     </p>
@@ -973,7 +985,8 @@ function Home() {
                       flex
                       items-center
                       justify-between
-                      mt-5
+                      gap-4
+                      mt-6
                     ">
 
                       <p className="
@@ -986,6 +999,7 @@ function Home() {
                       <p className="
                         text-orange-400
                         font-bold
+                        shrink-0
                       ">
                         ₹{restaurant.delivery_fee}
                       </p>
@@ -997,9 +1011,13 @@ function Home() {
                 </div>
               ))
             }
+
           </div>
+
         </div>
+
       </div>
+
     </div>
   );
 }

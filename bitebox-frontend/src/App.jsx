@@ -12,6 +12,7 @@ import RestaurantDetails from "./pages/customer/RestaurantDetails";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 import RoleProtectedRoute from "./routes/RoleProtectedRoute";
+
 import Checkout from "./pages/customer/Checkout";
 import OrderSuccess from "./pages/customer/OrderSuccess";
 
@@ -23,6 +24,9 @@ import RestaurantMenu from "./pages/restaurant/RestaurantMenu";
 import RestaurantOrders from "./pages/restaurant/RestaurantOrders";
 import RestaurantAnalytics from "./pages/restaurant/RestaurantAnalytics";
 import RestaurantSettings from "./pages/restaurant/RestaurantSettings";
+
+import DriverDashboard from "./pages/driver/DriverDashboard";
+
 
 function App() {
 
@@ -119,12 +123,15 @@ function App() {
           path="/restaurant/menu"
           element={
             <RoleProtectedRoute
-              allowedRoles={["restaurant"]}
+              allowedRoles={[
+                "restaurant",
+              ]}
             >
               <RestaurantMenu />
             </RoleProtectedRoute>
           }
         />
+
         <Route
           path="/restaurant/orders"
           element={
@@ -142,19 +149,39 @@ function App() {
           path="/restaurant/analytics"
           element={
             <RoleProtectedRoute
-              allowedRoles={["restaurant"]}
+              allowedRoles={[
+                "restaurant",
+              ]}
             >
               <RestaurantAnalytics />
             </RoleProtectedRoute>
           }
         />
+
         <Route
           path="/restaurant/settings"
           element={
             <RoleProtectedRoute
-              allowedRoles={["restaurant"]}
+              allowedRoles={[
+                "restaurant",
+              ]}
             >
               <RestaurantSettings />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* DRIVER */}
+
+        <Route
+          path="/driver/dashboard"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={[
+                "driver",
+              ]}
+            >
+              <DriverDashboard />
             </RoleProtectedRoute>
           }
         />

@@ -1,47 +1,38 @@
-import {
-  ImagePlus,
-  Loader2,
-} from "lucide-react";
-
-import {
-  useState,
-} from "react";
+import { useState } from "react";
 
 import API from "../api/axios";
 
 function ImageUpload({
 
   value,
-
   onChange,
-
-  label = "Upload Image"
+  label
 
 }) {
 
-  const [loading, setLoading] =
+  const [uploading, setUploading] =
     useState(false);
 
-  const uploadImage = async (
+  const handleUpload = async (
     e
   ) => {
 
-    const file =
-      e.target.files[0];
-
-    if (!file) return;
-
     try {
 
-      setLoading(true);
+      const file =
+        e.target.files[0];
+
+      if (!file) return;
 
       const formData =
         new FormData();
 
       formData.append(
-        "file",
+        "image",
         file
       );
+
+      setUploading(true);
 
       const response =
         await API.post(
@@ -51,16 +42,11 @@ function ImageUpload({
           formData,
 
           {
-
             headers: {
-
               "Content-Type":
-              "multipart/form-data"
-
-            }
-
+              "multipart/form-data",
+            },
           }
-
         );
 
       onChange(
@@ -77,7 +63,7 @@ function ImageUpload({
 
     } finally {
 
-      setLoading(false);
+      setUploading(false);
     }
   };
 
@@ -86,17 +72,16 @@ function ImageUpload({
     <div>
 
       <p className="
-        text-sm
-        text-gray-400
-        mb-3
+        mb-4
+        font-bold
+        text-lg
       ">
         {label}
       </p>
 
       <label className="
-        w-full
-        h-56
-        rounded-3xl
+        h-[260px]
+        rounded-[32px]
         border-2
         border-dashed
         border-white/10
@@ -105,28 +90,17 @@ function ImageUpload({
         flex-col
         items-center
         justify-center
-        cursor-pointer
         overflow-hidden
-        hover:border-orange-500/40
-        transition
+        cursor-pointer
+        relative
       ">
 
         {
-          loading ? (
-
-            <Loader2
-              className="
-                animate-spin
-                text-orange-400
-              "
-              size={42}
-            />
-
-          ) : value ? (
+          value ? (
 
             <img
               src={value}
-              alt="uploaded"
+              alt="upload"
               className="
                 w-full
                 h-full
@@ -136,32 +110,52 @@ function ImageUpload({
 
           ) : (
 
-            <>
-
-              <ImagePlus
-                size={44}
-                className="
-                  text-orange-400
-                  mb-4
-                "
-              />
+            <div className="
+              text-center
+            ">
 
               <p className="
+                text-xl
                 font-bold
+                mb-2
               ">
-                Click to upload
+                Upload Image
               </p>
 
-            </>
+              <p className="
+                text-gray-400
+              ">
+                JPG, PNG, WEBP
+              </p>
 
+            </div>
           )
         }
 
         <input
           type="file"
+          accept="image/*"
+          onChange={handleUpload}
           className="hidden"
-          onChange={uploadImage}
         />
+
+        {
+          uploading && (
+
+            <div className="
+              absolute
+              inset-0
+              bg-black/70
+              flex
+              items-center
+              justify-center
+              text-xl
+              font-black
+            ">
+              Uploading...
+            </div>
+          )
+        }
 
       </label>
 

@@ -281,7 +281,7 @@ function OrderCard({
           onClick={() =>
             updateStatus(
               order.id,
-              "delivered"
+              "ready_for_pickup"
             )
           }
           className="
@@ -295,7 +295,7 @@ function OrderCard({
             font-bold
           "
         >
-          Delivered
+          Ready For Pickup
         </button>
 
         <button
