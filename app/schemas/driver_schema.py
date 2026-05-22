@@ -1,13 +1,40 @@
 from pydantic import BaseModel
 
 
+# REGISTER DRIVER
+
+class DriverCreate(BaseModel):
+
+    full_name: str
+    phone: str
+    vehicle_type: str
+    vehicle_number: str
+
+
+# UPDATE DRIVER LOCATION
+
+class DriverLocationUpdate(BaseModel):
+
+    latitude: float
+    longitude: float
+
+
+# ONLINE / OFFLINE STATUS
+
+class DriverStatusUpdate(BaseModel):
+
+    is_online: bool
+
+
+# DRIVER AVAILABILITY
+
 class DriverAvailabilityRequest(BaseModel):
 
     is_available: bool
 
 
-class DriverLocationUpdateRequest(BaseModel):
+# DELIVERY STATUS
 
-    latitude: float
+class DeliveryStatusUpdate(BaseModel):
 
-    longitude: float
+    delivery_status: str

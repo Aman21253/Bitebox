@@ -13,6 +13,7 @@ import {
   CircleDollarSign,
   PackageCheck,
   Bike,
+  BadgeIndianRupee,
 } from "lucide-react";
 
 import API from "../../api/axios";
@@ -21,7 +22,8 @@ function MyOrders() {
 
   const navigate = useNavigate();
 
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] =
+    useState([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -53,7 +55,49 @@ function MyOrders() {
     }
   };
 
-  const getStatusColor = (status) => {
+  // REFUND REQUEST
+
+  const requestRefund = async (
+    orderId
+  ) => {
+
+    const reason = prompt(
+      "Enter refund reason"
+    );
+
+    if (!reason) return;
+
+    try {
+
+      await API.post(
+        `/refunds/${orderId}/request`,
+        {
+          refund_reason: reason,
+          refund_type: "full",
+          refund_amount: 100
+        }
+      );
+
+      alert(
+        "Refund requested successfully"
+      );
+
+      fetchOrders();
+
+    } catch (error) {
+
+      console.log(error);
+
+      alert(
+        error.response?.data?.detail ||
+        "Refund request failed"
+      );
+    }
+  };
+
+  const getStatusColor = (
+    status
+  ) => {
 
     switch (status) {
 
@@ -68,6 +112,32 @@ function MyOrders() {
 
       case "delivered":
         return "text-green-400 bg-green-500/10 border-green-500/20";
+
+      case "cancelled":
+        return "text-red-400 bg-red-500/10 border-red-500/20";
+
+      default:
+        return "text-gray-300 bg-white/5 border-white/10";
+    }
+  };
+
+  const getRefundColor = (
+    status
+  ) => {
+
+    switch (status) {
+
+      case "pending":
+        return "text-yellow-300 bg-yellow-500/10 border-yellow-500/20";
+
+      case "approved":
+        return "text-green-300 bg-green-500/10 border-green-500/20";
+
+      case "rejected":
+        return "text-red-300 bg-red-500/10 border-red-500/20";
+
+      case "processed":
+        return "text-blue-300 bg-blue-500/10 border-blue-500/20";
 
       default:
         return "text-gray-300 bg-white/5 border-white/10";
@@ -104,8 +174,6 @@ function MyOrders() {
       xl:px-12
       py-8
     ">
-
-      {/* TOP */}
 
       <div className="
         max-w-[1700px]
@@ -204,27 +272,7 @@ function MyOrders() {
                 leading-relaxed
               ">
                 Your delicious journey starts here.
-                Explore restaurants and place your
-                first order.
               </p>
-
-              <button
-                onClick={() => navigate("/")}
-                className="
-                  mt-8
-                  bg-orange-500
-                  hover:bg-orange-400
-                  px-8
-                  py-4
-                  rounded-2xl
-                  font-bold
-                  text-lg
-                  transition-all
-                  duration-300
-                "
-              >
-                Explore Restaurants
-              </button>
 
             </div>
           )
@@ -334,7 +382,6 @@ function MyOrders() {
                       border-white/10
                       rounded-2xl
                       p-5
-                      min-h-[140px]
                     ">
 
                       <div className="
@@ -364,7 +411,6 @@ function MyOrders() {
                         text-3xl
                         font-black
                         text-orange-400
-                        break-words
                       ">
                         ₹{order.total_amount}
                       </h3>
@@ -379,7 +425,6 @@ function MyOrders() {
                       border-white/10
                       rounded-2xl
                       p-5
-                      min-h-[140px]
                     ">
 
                       <div className="
@@ -409,7 +454,9 @@ function MyOrders() {
                         text-3xl
                         font-black
                       ">
-                        {order.estimated_delivery_time}m
+                        {
+                          order.estimated_delivery_time
+                        }m
                       </h3>
 
                     </div>
@@ -422,7 +469,6 @@ function MyOrders() {
                       border-white/10
                       rounded-2xl
                       p-5
-                      min-h-[140px]
                     ">
 
                       <div className="
@@ -453,8 +499,6 @@ function MyOrders() {
                         xl:text-lg
                         font-bold
                         capitalize
-                        break-words
-                        leading-relaxed
                       ">
                         {
                           order.delivery_status
@@ -503,67 +547,137 @@ function MyOrders() {
                     <p className="
                       text-lg
                       leading-relaxed
-                      break-words
                     ">
                       {order.delivery_address}
                     </p>
 
                   </div>
 
+                  {/* REFUND STATUS */}
+
+                  {
+                    order.refund_status && (
+
+                      <div className={`
+                        mt-6
+                        px-5
+                        py-4
+                        rounded-2xl
+                        border
+                        font-bold
+                        capitalize
+                        flex
+                        items-center
+                        gap-3
+                        ${getRefundColor(order.refund_status)}
+                      `}>
+
+                        <BadgeIndianRupee size={20} />
+
+                        Refund Status:
+                        {" "}
+                        {
+                          order.refund_status
+                        }
+
+                      </div>
+                    )
+                  }
+
                   {/* FOOTER */}
 
                   <div className="
                     flex
                     flex-col
-                    md:flex-row
-                    md:items-center
-                    justify-between
-                    gap-5
+                    gap-4
                     mt-8
                   ">
 
-                    <div>
+                    <div className="
+                      flex
+                      flex-col
+                      md:flex-row
+                      md:items-center
+                      justify-between
+                      gap-5
+                    ">
 
-                      <p className="
-                        text-sm
-                        text-gray-400
-                        mb-1
-                      ">
-                        Payment Status
-                      </p>
+                      <div>
 
-                      <p className="
-                        font-bold
-                        capitalize
-                        text-lg
-                      ">
-                        {order.payment_status}
-                      </p>
+                        <p className="
+                          text-sm
+                          text-gray-400
+                          mb-1
+                        ">
+                          Payment Status
+                        </p>
+
+                        <p className="
+                          font-bold
+                          capitalize
+                          text-lg
+                        ">
+                          {
+                            order.payment_status
+                          }
+                        </p>
+
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          navigate(
+                            `/track-order/${order.id}`
+                          )
+                        }
+                        className="
+                          bg-orange-500
+                          hover:bg-orange-400
+                          px-6
+                          py-3
+                          rounded-2xl
+                          font-bold
+                          transition-all
+                          duration-300
+                        "
+                      >
+                        Track Order
+                      </button>
 
                     </div>
 
-                    <button
-                      onClick={() =>
-                        navigate(
-                          `/track-order/${order.id}`
-                        )
-                      }
-                      className="
-                        bg-orange-500
-                        hover:bg-orange-400
-                        px-6
-                        py-3
-                        rounded-2xl
-                        font-bold
-                        transition-all
-                        duration-300
-                        hover:scale-[1.02]
-                        w-full
-                        md:w-auto
-                      "
-                    >
-                      Track Order
-                    </button>
+                    {/* REFUND BUTTON */}
+
+                    {
+                      order.status ===
+                      "delivered" &&
+
+                      !order.refund_status && (
+
+                        <button
+                          onClick={() =>
+                            requestRefund(
+                              order.id
+                            )
+                          }
+                          className="
+                            w-full
+                            h-14
+                            rounded-2xl
+                            bg-red-500/10
+                            border
+                            border-red-500/20
+                            text-red-300
+                            font-bold
+                            hover:bg-red-500/20
+                            transition-all
+                            duration-300
+                          "
+                        >
+                          Request Refund
+                        </button>
+                      )
+                    }
 
                   </div>
 

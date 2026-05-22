@@ -27,6 +27,11 @@ import RestaurantSettings from "./pages/restaurant/RestaurantSettings";
 
 import DriverDashboard from "./pages/driver/DriverDashboard";
 
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminRestaurants from "./pages/admin/AdminRestaurants";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
 function App() {
 
@@ -182,6 +187,76 @@ function App() {
               ]}
             >
               <DriverDashboard />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* ADMIN */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={[
+                "admin",
+              ]}
+            >
+              <AdminDashboard />
+            </RoleProtectedRoute>
+          }
+        
+        />
+
+        <Route
+
+          path="/admin/restaurants"
+        
+          element={
+          
+            <RoleProtectedRoute
+              allowedRoles={[
+                "admin",
+              ]}
+            >
+              <AdminRestaurants />
+            </RoleProtectedRoute>
+
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={[
+                "admin",
+              ]}
+            >
+              <AdminUsers />
+            </RoleProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/admin/orders"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={[
+                "admin",
+              ]}
+            >
+              <AdminOrders />
+            </RoleProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/admin/analytics"
+          element={
+            <RoleProtectedRoute
+              allowedRoles={[
+                "admin",
+              ]}
+            >
+              <AdminAnalytics />
             </RoleProtectedRoute>
           }
         />

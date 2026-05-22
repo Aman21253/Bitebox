@@ -6,6 +6,8 @@ import {
   ArrowLeft,
   MapPin,
   Clock3,
+  TicketPercent,
+  CheckCircle2,
 } from "lucide-react";
 
 import {
@@ -34,6 +36,32 @@ function Checkout() {
   const [loading, setLoading] =
     useState(false);
 
+  // ─────────────────────────────────────────
+  // COUPON STATES
+  // ─────────────────────────────────────────
+
+  const [couponCode, setCouponCode] =
+    useState("");
+
+  const [couponLoading, setCouponLoading] =
+    useState(false);
+
+  const [couponApplied, setCouponApplied] =
+    useState(false);
+
+  const [discountAmount, setDiscountAmount] =
+    useState(0);
+
+  const [finalAmount, setFinalAmount] =
+    useState(0);
+
+  const [couponMessage, setCouponMessage] =
+    useState("");
+
+  // ─────────────────────────────────────────
+  // BILLING
+  // ─────────────────────────────────────────
+
   const subtotal =
     cart?.total_amount || 0;
 
@@ -43,12 +71,80 @@ function Checkout() {
     subtotal * 0.05
   );
 
-  const total =
+  const originalTotal =
     subtotal +
     deliveryFee +
     taxes;
 
+  const total =
+    couponApplied
+      ? finalAmount
+      : originalTotal;
+
+  // ─────────────────────────────────────────
+  // APPLY COUPON
+  // ─────────────────────────────────────────
+
+  const handleApplyCoupon = async () => {
+
+    if (!couponCode) {
+
+      return alert(
+        "Enter coupon code"
+      );
+    }
+
+    try {
+
+      setCouponLoading(true);
+
+      const response =
+        await API.post(
+          "/coupons/apply",
+          {
+            code: couponCode,
+            order_amount:
+              originalTotal,
+          }
+        );
+
+      setCouponApplied(true);
+
+      setDiscountAmount(
+        response.data.discount_amount
+      );
+
+      setFinalAmount(
+        response.data.final_amount
+      );
+
+      setCouponMessage(
+        response.data.message
+      );
+
+    } catch (error) {
+
+      console.log(error);
+
+      setCouponApplied(false);
+
+      setDiscountAmount(0);
+
+      setFinalAmount(0);
+
+      setCouponMessage(
+        error.response?.data?.detail ||
+        "Coupon failed"
+      );
+    } finally {
+
+      setCouponLoading(false);
+    }
+  };
+
+  // ─────────────────────────────────────────
   // PAYMENT
+  // ─────────────────────────────────────────
 
   const handlePayment = async () => {
 
@@ -60,7 +156,10 @@ function Checkout() {
 
       const response =
         await API.post(
-          "/payments/create-order"
+          "/payments/create-order",
+          {
+            amount: total
+          }
         );
 
       const data = response.data;
@@ -108,6 +207,17 @@ function Checkout() {
                 {
                   delivery_address:
                     address,
+
+                  coupon_code:
+                    couponApplied
+                      ? couponCode
+                      : null,
+
+                  discount_amount:
+                    discountAmount,
+
+                  original_amount:
+                    originalTotal,
                 }
               );
 
@@ -455,6 +565,125 @@ function Checkout() {
 
               </div>
 
+              {/* COUPON */}
+
+              <div className="
+                mb-8
+                bg-white/5
+                border
+                border-white/10
+                rounded-3xl
+                p-5
+              ">
+
+                <div className="
+                  flex
+                  items-center
+                  gap-3
+                  mb-5
+                ">
+
+                  <TicketPercent
+                    className="
+                      text-orange-400
+                    "
+                  />
+
+                  <h3 className="
+                    text-xl
+                    font-bold
+                  ">
+                    Apply Coupon
+                  </h3>
+
+                </div>
+
+                <div className="
+                  flex
+                  gap-3
+                ">
+
+                  <input
+                    type="text"
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={(e) =>
+                      setCouponCode(
+                        e.target.value
+                      )
+                    }
+                    className="
+                      flex-1
+                      h-14
+                      rounded-2xl
+                      bg-black/20
+                      border
+                      border-white/10
+                      px-5
+                      outline-none
+                    "
+                  />
+
+                  <button
+                    onClick={
+                      handleApplyCoupon
+                    }
+                    disabled={
+                      couponLoading
+                    }
+                    className="
+                      px-6
+                      rounded-2xl
+                      bg-orange-500
+                      hover:bg-orange-400
+                      font-bold
+                      transition-all
+                      duration-300
+                    "
+                  >
+
+                    {
+                      couponLoading
+                        ? "..."
+                        : "Apply"
+                    }
+
+                  </button>
+
+                </div>
+
+                {
+                  couponMessage && (
+
+                    <div className={`
+                      mt-4
+                      rounded-2xl
+                      p-4
+                      text-sm
+                      font-semibold
+                      flex
+                      items-center
+                      gap-2
+
+                      ${
+                        couponApplied
+                        ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                        : "bg-red-500/10 text-red-400 border border-red-500/20"
+                      }
+                    `}>
+
+                      <CheckCircle2
+                        size={16}
+                      />
+
+                      {couponMessage}
+
+                    </div>
+                  )
+                }
+
+              </div>
+
               {/* BILLING */}
 
               <div className="
@@ -499,6 +728,26 @@ function Checkout() {
                   <p>₹{taxes}</p>
 
                 </div>
+
+                {
+                  couponApplied && (
+
+                    <div className="
+                      flex
+                      justify-between
+                      text-green-400
+                      font-bold
+                    ">
+
+                      <p>Coupon Discount</p>
+
+                      <p>
+                        -₹{discountAmount}
+                      </p>
+
+                    </div>
+                  )
+                }
 
                 <div className="
                   border-t

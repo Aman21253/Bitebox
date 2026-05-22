@@ -31,7 +31,59 @@ function TrackOrder() {
   const [driverLocation, setDriverLocation] =
     useState(null);
 
+  const [animatedLocation, setAnimatedLocation] =
+    useState(null);
+
+  // ─────────────────────────────────────────
+  // DRIVER MOVEMENT ANIMATION
+  // ─────────────────────────────────────────
+
+  const animateDriverMovement = (
+    start,
+    end
+  ) => {
+
+    let frame = 0;
+
+    const totalFrames = 60;
+
+    const interval = setInterval(() => {
+
+      frame++;
+
+      const progress =
+        frame / totalFrames;
+
+      const lat =
+        start.lat +
+        (end.lat - start.lat) *
+        progress;
+
+      const lng =
+        start.lng +
+        (end.lng - start.lng) *
+        progress;
+
+      setAnimatedLocation({
+        lat,
+        lng,
+      });
+
+      if (
+        frame >= totalFrames
+      ) {
+
+        clearInterval(interval);
+
+        setAnimatedLocation(end);
+      }
+
+    }, 16);
+  };
+
+  // ─────────────────────────────────────────
   // INITIAL FETCH
+  // ─────────────────────────────────────────
 
   useEffect(() => {
 
@@ -39,7 +91,9 @@ function TrackOrder() {
 
   }, []);
 
-  // REALTIME SOCKET CONNECTION
+  // ─────────────────────────────────────────
+  // REALTIME SOCKET
+  // ─────────────────────────────────────────
 
   useEffect(() => {
 
@@ -71,16 +125,35 @@ function TrackOrder() {
 
         const data = message.data;
 
-        // UPDATE DRIVER LOCATION LIVE
-
-        setDriverLocation({
+        const newLocation = {
 
           lat: data.latitude,
 
           lng: data.longitude,
+        };
+
+        // SMOOTH ANIMATION
+
+        setAnimatedLocation((prev) => {
+
+          if (!prev) {
+          
+            return newLocation;
+          }
+        
+          animateDriverMovement(
+            prev,
+            newLocation
+          );
+        
+          return prev;
         });
 
-        // UPDATE ORDER STATUS LIVE
+        setDriverLocation(
+          newLocation
+        );
+
+        // UPDATE ORDER STATUS
 
         setOrder((prev) => ({
 
@@ -112,7 +185,9 @@ function TrackOrder() {
 
   }, [id]);
 
+  // ─────────────────────────────────────────
   // FETCH ORDER
+  // ─────────────────────────────────────────
 
   const fetchOrder = async () => {
 
@@ -128,14 +203,24 @@ function TrackOrder() {
 
       if (response.data.driver) {
 
-        setDriverLocation({
+        const initialLocation = {
 
           lat:
-            response.data.driver.latitude || 28.6139,
+            response.data.driver.latitude ||
+            28.6139,
 
           lng:
-            response.data.driver.longitude || 77.2090,
-        });
+            response.data.driver.longitude ||
+            77.2090,
+        };
+
+        setDriverLocation(
+          initialLocation
+        );
+
+        setAnimatedLocation(
+          initialLocation
+        );
       }
 
     } catch (error) {
@@ -148,7 +233,9 @@ function TrackOrder() {
     }
   };
 
+  // ─────────────────────────────────────────
   // DELIVERY STEP STATUS
+  // ─────────────────────────────────────────
 
   const getStepStatus = (step) => {
 
@@ -174,7 +261,9 @@ function TrackOrder() {
     );
   };
 
-  // LOADING SCREEN
+  // ─────────────────────────────────────────
+  // LOADING
+  // ─────────────────────────────────────────
 
   if (loading || !order) {
 
@@ -371,6 +460,7 @@ function TrackOrder() {
               <LiveTrackingMap
 
                 driverLocation={
+                  animatedLocation ||
                   driverLocation
                 }
 
@@ -663,11 +753,11 @@ function TrackOrder() {
                     ">
 
                       {
-                        driverLocation?.lat
+                        animatedLocation?.lat
                       },
 
                       {
-                        driverLocation?.lng
+                        animatedLocation?.lng
                       }
 
                     </h3>

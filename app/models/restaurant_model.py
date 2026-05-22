@@ -121,13 +121,34 @@ class Restaurant(Base):
         default="11:00 PM"
     )
 
-    # STATUS
+    # APPROVAL FLOW
 
-    status = Column(
+    approval_status = Column(
         String(50),
         default="pending"
     )
 
+    rejection_reason = Column(
+        String(500),
+        nullable=True
+    )
+
+    approved_by = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=True
+    )
+
+    # STATUS
+
+    status = Column(
+        String(50),
+        default="active"
+    )
+
     # RELATIONSHIP
 
-    owner = relationship("User")
+    owner = relationship(
+        "User",
+        foreign_keys=[owner_id]
+    )

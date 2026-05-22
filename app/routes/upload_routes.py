@@ -1,57 +1,41 @@
-from fastapi import APIRouter
-from fastapi import UploadFile
-from fastapi import File
-from fastapi import HTTPException
+from fastapi import (
+    APIRouter,
+    UploadFile,
+    File,
+    Depends
+)
 
-import cloudinary.uploader
+from app.middleware.role_middleware import (
+    require_role
+)
 
-from app.config.cloudinary_config import *
+from app.utils.cloudinary import (
+    upload_image
+)
 
 router = APIRouter(
     prefix="/api/upload",
-    tags=["Upload"]
+    tags=["Uploads"]
 )
 
 
-# ─────────────────────────────────────────────
-# UPLOAD IMAGE
-# ─────────────────────────────────────────────
-
 @router.post("/image")
-async def upload_image(
+async def upload_image_api(
 
-    file: UploadFile = File(...)
+    image: UploadFile = File(...),
+
+    current_user=Depends(
+        require_role([
+            "restaurant"
+        ])
+    )
 
 ):
 
-    try:
+    image_url = upload_image(
+        image.file
+    )
 
-        # UPLOAD TO CLOUDINARY
-
-        result = cloudinary.uploader.upload(
-
-            file.file,
-
-            folder="bitebox"
-
-        )
-
-        return {
-
-            "message":
-            "Image uploaded successfully",
-
-            "image_url":
-            result["secure_url"]
-
-        }
-
-    except Exception as e:
-
-        raise HTTPException(
-
-            status_code=500,
-
-            detail=str(e)
-
-        )
+    return {
+        "image_url": image_url
+    }

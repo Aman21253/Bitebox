@@ -1,6 +1,8 @@
-from fastapi import APIRouter
-from fastapi import WebSocket
-from fastapi import WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    WebSocket,
+    WebSocketDisconnect
+)
 
 from app.websockets.connection_manager import (
     manager
@@ -9,23 +11,54 @@ from app.websockets.connection_manager import (
 router = APIRouter()
 
 
-@router.websocket("/ws/orders")
-async def websocket_orders(
-    websocket: WebSocket
+# LIVE ORDER TRACKING SOCKET
+
+@router.websocket(
+    "/ws/order-tracking/{order_id}"
+)
+async def websocket_tracking(
+
+    websocket: WebSocket,
+
+    order_id: int
+
 ):
+
     await manager.connect(
+        order_id,
         websocket
     )
-    print("✅ WebSocket Connected")
+
+    print(
+        f"✅ Order {order_id} socket connected"
+    )
 
     try:
+
         while True:
-            await websocket.receive()
+
+            data = await websocket.receive_json()
+
+            # SEND LIVE LOCATION TO ALL
+            # USERS TRACKING THIS ORDER
+
+            await manager.send_location_update(
+
+                order_id,
+
+                {
+                    "type": "location_update",
+                    "data": data
+                }
+            )
 
     except WebSocketDisconnect:
+
         print(
-            "❌ WebSocket Disconnected"
+            f"❌ Order {order_id} socket disconnected"
         )
+
         manager.disconnect(
+            order_id,
             websocket
         )

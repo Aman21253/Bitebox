@@ -1,126 +1,284 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
 
-from app.middleware.role_middleware import require_role
+from sqlalchemy.orm import Session
 
 from app.database.db import get_db
 
-from app.models.order_model import Order
-from app.models.user_model import User
+from app.middleware.role_middleware import require_role
 
-from app.schemas.order_schema import (
-    UpdateOrderStatusRequest
-)
+from app.models.driver_model import Driver
+from app.models.order_model import Order
 
 from app.schemas.driver_schema import (
+
+    DriverCreate,
+    DriverLocationUpdate,
+    DriverStatusUpdate,
     DriverAvailabilityRequest,
-    DriverLocationUpdateRequest
+    DeliveryStatusUpdate
 )
 
 router = APIRouter(
-    prefix="/api/driver",
-    tags=["Driver"]
+    prefix="/api/drivers",
+    tags=["Drivers"]
 )
 
 
-# ─────────────────────────────────────────────────────────────
-# Driver Dashboard
-# ─────────────────────────────────────────────────────────────
+# REGISTER DRIVER
 
-@router.get("/dashboard")
-def driver_dashboard(
-    current_user=Depends(
-        require_role(["driver"])
-    )
-):
+@router.post("/register")
+def register_driver(
 
-    return {
-        "message": f"Welcome Driver {current_user.name}"
-    }
+    body: DriverCreate,
 
-
-# ─────────────────────────────────────────────────────────────
-# Driver Availability
-# ─────────────────────────────────────────────────────────────
-
-@router.put("/availability")
-def update_driver_availability(
-    body: DriverAvailabilityRequest,
     current_user=Depends(
         require_role(["driver"])
     ),
+
     db: Session = Depends(get_db)
 ):
 
-    current_user.is_available = body.is_available
+    existing_driver = db.query(Driver).filter(
+        Driver.user_id == current_user.id
+    ).first()
+
+    if existing_driver:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Driver already exists"
+        )
+
+    driver = Driver(
+
+        user_id=current_user.id,
+
+        full_name=body.full_name,
+
+        phone=body.phone,
+
+        vehicle_type=body.vehicle_type,
+
+        vehicle_number=body.vehicle_number,
+
+        is_online=True,
+        is_available=True
+    )
+
+    db.add(driver)
+
+    db.commit()
+
+    db.refresh(driver)
+
+    return {
+        "message": "Driver registered successfully"
+    }
+
+
+# DRIVER PROFILE
+
+@router.get("/me")
+def get_driver_profile(
+
+    current_user=Depends(
+        require_role(["driver"])
+    ),
+
+    db: Session = Depends(get_db)
+):
+
+    driver = db.query(Driver).filter(
+        Driver.user_id == current_user.id
+    ).first()
+
+    if not driver:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Driver not found"
+        )
+
+    return driver
+
+
+# UPDATE ONLINE STATUS
+
+@router.put("/status")
+def update_driver_status(
+
+    body: DriverStatusUpdate,
+
+    current_user=Depends(
+        require_role(["driver"])
+    ),
+
+    db: Session = Depends(get_db)
+):
+
+    driver = db.query(Driver).filter(
+        Driver.user_id == current_user.id
+    ).first()
+
+    if not driver:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Driver not found"
+        )
+
+    driver.is_online = body.is_online
 
     db.commit()
 
     return {
-        "message": "Availability updated successfully",
-        "is_available": current_user.is_available
+        "message": "Status updated"
     }
 
 
-# ─────────────────────────────────────────────────────────────
-# Update Driver Location
-# ─────────────────────────────────────────────────────────────
+# UPDATE LOCATION
 
 @router.put("/location")
 def update_driver_location(
-    body: DriverLocationUpdateRequest,
+
+    body: DriverLocationUpdate,
+
     current_user=Depends(
         require_role(["driver"])
     ),
+
     db: Session = Depends(get_db)
 ):
 
-    current_user.latitude = body.latitude
+    driver = db.query(Driver).filter(
+        Driver.user_id == current_user.id
+    ).first()
 
-    current_user.longitude = body.longitude
+    if not driver:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Driver not found"
+        )
+
+    driver.current_latitude = body.latitude
+    driver.current_longitude = body.longitude
 
     db.commit()
 
     return {
-        "message": "Driver location updated successfully"
+        "message": "Location updated"
     }
 
 
-# ─────────────────────────────────────────────────────────────
-# Assigned Orders
-# ─────────────────────────────────────────────────────────────
+# AVAILABLE ORDERS
 
-@router.get("/orders")
-def assigned_orders(
+@router.get("/available-orders")
+def get_available_orders(
+
     current_user=Depends(
         require_role(["driver"])
     ),
+
     db: Session = Depends(get_db)
 ):
 
     orders = db.query(Order).filter(
-        Order.driver_id == current_user.id
+
+        Order.delivery_status == "waiting_for_driver"
+
     ).all()
 
     return orders
 
 
-# ─────────────────────────────────────────────────────────────
-# Pick Order
-# ─────────────────────────────────────────────────────────────
+# CURRENT ACTIVE DELIVERY
 
-@router.put("/orders/{order_id}/pickup")
-def pickup_order(
-    order_id: int,
+@router.get("/active-delivery")
+def get_active_delivery(
+
     current_user=Depends(
         require_role(["driver"])
     ),
+
     db: Session = Depends(get_db)
 ):
 
+    driver = db.query(Driver).filter(
+        Driver.user_id == current_user.id
+    ).first()
+
+    if not driver:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Driver not found"
+        )
+
     order = db.query(Order).filter(
-        Order.id == order_id,
-        Order.driver_id == current_user.id
+
+        Order.driver_id == driver.id,
+
+        Order.delivery_status.in_([
+            "driver_assigned",
+            "picked_up",
+            "on_the_way"
+        ])
+
+    ).first()
+
+    if not order:
+
+        return {
+            "active_order": None
+        }
+
+    return order
+
+
+# ACCEPT ORDER
+
+@router.put("/accept-order/{order_id}")
+def accept_order(
+
+    order_id: int,
+
+    current_user=Depends(
+        require_role(["driver"])
+    ),
+
+    db: Session = Depends(get_db)
+):
+
+    driver = db.query(Driver).filter(
+        Driver.user_id == current_user.id
+    ).first()
+
+    if not driver:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Driver not found"
+        )
+
+    if not driver.is_online:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Driver is offline"
+        )
+
+    if not driver.is_available:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Complete current delivery first"
+        )
+
+    order = db.query(Order).filter(
+        Order.id == order_id
     ).first()
 
     if not order:
@@ -130,70 +288,72 @@ def pickup_order(
             detail="Order not found"
         )
 
-    order.status = "picked_up"
-
-    order.delivery_status = "on_the_way"
-
-    db.commit()
-
-    return {
-        "message": "Order picked successfully"
-    }
-
-
-# ─────────────────────────────────────────────────────────────
-# Deliver Order
-# ─────────────────────────────────────────────────────────────
-
-@router.put("/orders/{order_id}/deliver")
-def deliver_order(
-    order_id: int,
-    current_user=Depends(
-        require_role(["driver"])
-    ),
-    db: Session = Depends(get_db)
-):
-
-    order = db.query(Order).filter(
-        Order.id == order_id,
-        Order.driver_id == current_user.id
-    ).first()
-
-    if not order:
+    if order.driver_id:
 
         raise HTTPException(
-            status_code=404,
-            detail="Order not found"
+            status_code=400,
+            detail="Order already assigned"
         )
 
-    order.status = "delivered"
+    order.driver_id = driver.id
 
-    order.delivery_status = "completed"
+    order.delivery_status = "driver_assigned"
+
+    driver.is_available = False
 
     db.commit()
 
     return {
-        "message": "Order delivered successfully"
+        "message": "Order accepted successfully"
     }
 
 
-# ─────────────────────────────────────────────────────────────
-# Update Delivery Status
-# ─────────────────────────────────────────────────────────────
+# UPDATE DELIVERY STATUS
 
-@router.put("/orders/{order_id}/status")
+@router.put("/delivery-status/{order_id}")
 def update_delivery_status(
+
     order_id: int,
-    body: UpdateOrderStatusRequest,
+
+    body: DeliveryStatusUpdate,
+
     current_user=Depends(
         require_role(["driver"])
     ),
+
     db: Session = Depends(get_db)
 ):
 
+    allowed_statuses = [
+        "picked_up",
+        "on_the_way",
+        "delivered"
+    ]
+
+    if body.delivery_status not in allowed_statuses:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid delivery status"
+        )
+
+    driver = db.query(Driver).filter(
+        Driver.user_id == current_user.id
+    ).first()
+
+    if not driver:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Driver not found"
+        )
+
     order = db.query(Order).filter(
+
         Order.id == order_id,
-        Order.driver_id == current_user.id
+
+        Order.driver_id == driver.id
+
     ).first()
 
     if not order:
@@ -203,11 +363,51 @@ def update_delivery_status(
             detail="Order not found"
         )
 
-    order.status = body.status
+    order.delivery_status = body.delivery_status
+
+    # FINAL DELIVERY
+
+    if body.delivery_status == "delivered":
+
+        order.status = "delivered"
+
+        order.payment_status = "completed"
+
+        driver.is_available = True
+
+        driver.total_deliveries += 1
+
+        driver.total_earnings += 80
 
     db.commit()
 
     return {
-        "message": "Delivery status updated",
-        "status": order.status
+        "message": f"Order marked as {body.delivery_status}"
     }
+
+
+# DELIVERY HISTORY
+
+@router.get("/delivery-history")
+def get_delivery_history(
+
+    current_user=Depends(
+        require_role(["driver"])
+    ),
+
+    db: Session = Depends(get_db)
+):
+
+    driver = db.query(Driver).filter(
+        Driver.user_id == current_user.id
+    ).first()
+
+    orders = db.query(Order).filter(
+
+        Order.driver_id == driver.id,
+
+        Order.delivery_status == "delivered"
+
+    ).order_by(Order.id.desc()).all()
+
+    return orders

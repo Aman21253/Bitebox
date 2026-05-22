@@ -61,20 +61,30 @@ function Login() {
         response.data.user.role;
 
       // ROLE BASED REDIRECT
-      if (role === "driver") {
+      if (role === "admin") {
+
+        navigate(
+          "/admin/dashboard"
+        );
+      
+      } else if (
+        role === "driver"
+      ) {
+      
         navigate(
           "/driver/dashboard"
         );
+      
       } else if (
         role === "restaurant"
       ) {
-
+      
         navigate(
           "/restaurant/dashboard"
         );
-
+      
       } else {
-
+      
         navigate("/");
       }
 
