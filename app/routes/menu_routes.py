@@ -5,6 +5,7 @@ from app.database.db import get_db
 
 from app.middleware.role_middleware import require_role
 
+from app.models.menu_item_image_model import MenuItemImage
 from app.models.restaurant_model import Restaurant
 from app.models.menu_category_model import MenuCategory
 from app.models.menu_item_model import MenuItem
@@ -225,20 +226,37 @@ def create_menu_item(
         )
 
     item = MenuItem(
-        restaurant_id=restaurant.id,
-        category_id=body.category_id,
-        name=body.name,
-        description=body.description,
-        image_url=body.image_url,
-        is_veg=body.is_veg,
-        base_price=body.base_price,
-        preparation_time=body.preparation_time
+
+       restaurant_id=restaurant.id,
+       category_id=body.category_id,
+       name=body.name,
+       description=body.description,
+       image_url=body.image_url,
+       is_veg=body.is_veg,
+       base_price=body.base_price,
+       preparation_time=body.preparation_time,
+       calories=body.calories,
+       serving_info=body.serving_info,
+       spice_level=body.spice_level,
+       allergens=body.allergens,
+       packaging_charge=body.packaging_charge,
+       tags=body.tags,
+       recommended=body.recommended
     )
 
     db.add(item)
     db.commit()
     db.refresh(item)
 
+    for image in body.images:
+
+        menu_image = MenuItemImage(
+            menu_item_id=item.id,
+            image_url=image
+        )
+        db.add(menu_image)
+
+    db.commit()
     return {
         "message": "Menu item created successfully",
         "item_id": item.id

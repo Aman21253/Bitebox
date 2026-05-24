@@ -4,7 +4,8 @@ from sqlalchemy import (
     String,
     Boolean,
     Float,
-    ForeignKey
+    ForeignKey,
+    Text
 )
 
 from sqlalchemy.orm import relationship
@@ -16,7 +17,11 @@ class MenuItem(Base):
 
     __tablename__ = "menu_items"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
     restaurant_id = Column(
         Integer,
@@ -30,20 +35,87 @@ class MenuItem(Base):
         nullable=False
     )
 
-    name = Column(String(150), nullable=False)
+    name = Column(
+        String(150),
+        nullable=False
+    )
 
-    description = Column(String(500), nullable=True)
+    description = Column(
+        String(500),
+        nullable=True
+    )
 
-    image_url = Column(String(500), nullable=True)
+    image_url = Column(
+        String(500),
+        nullable=True
+    )
 
-    is_veg = Column(Boolean, default=True)
+    is_veg = Column(
+        Boolean,
+        default=True
+    )
 
-    base_price = Column(Float, nullable=False)
+    base_price = Column(
+        Float,
+        nullable=False
+    )
 
-    is_available = Column(Boolean, default=True)
+    is_available = Column(
+        Boolean,
+        default=True
+    )
 
-    preparation_time = Column(Integer, default=15)
+    preparation_time = Column(
+        Integer,
+        default=15
+    )
 
-    restaurant = relationship("Restaurant")
+    # NEW FIELDS
 
-    category = relationship("MenuCategory")
+    calories = Column(
+        Integer,
+        default=0
+    )
+
+    serving_info = Column(
+        String(100),
+        nullable=True
+    )
+
+    spice_level = Column(
+        String(50),
+        default="medium"
+    )
+
+    allergens = Column(
+        Text,
+        nullable=True
+    )
+
+    packaging_charge = Column(
+        Float,
+        default=0
+    )
+
+    tags = Column(
+        Text,
+        nullable=True
+    )
+
+    recommended = Column(
+        Boolean,
+        default=False
+    )
+
+    restaurant = relationship(
+        "Restaurant"
+    )
+
+    category = relationship(
+        "MenuCategory"
+    )
+
+    images = relationship(
+        "MenuItemImage",
+        cascade="all, delete"
+    )

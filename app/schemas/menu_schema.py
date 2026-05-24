@@ -32,6 +32,14 @@ class MenuItemCreate(BaseModel):
     is_veg: bool = True
     base_price: float
     preparation_time: int = 15
+    calories: int = 0
+    serving_info: Optional[str] = None
+    spice_level: str = "medium"
+    allergens: Optional[str] = None
+    packaging_charge: float = 0
+    tags: Optional[str] = None
+    recommended: bool = False
+    images: Optional[list[str]] = []
 
 
 class MenuItemUpdate(BaseModel):
@@ -44,6 +52,14 @@ class MenuItemUpdate(BaseModel):
     base_price: float
     preparation_time: int = 15
     is_available: bool = True
+    calories: int = 0
+    serving_info: Optional[str] = None
+    spice_level: str = "medium"
+    allergens: Optional[str] = None
+    packaging_charge: float = 0
+    tags: Optional[str] = None
+    recommended: bool = False
+    images: Optional[list[str]] = []
 
 
 # ─────────────────────────────────────────────────────────────
