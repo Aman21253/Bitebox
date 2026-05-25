@@ -4,10 +4,12 @@ from sqlalchemy import (
     String,
     Boolean,
     Float,
-    ForeignKey
+    ForeignKey,
+    DateTime
 )
 
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from app.database.db import Base
 
@@ -78,9 +80,34 @@ class Driver(Base):
         default=0
     )
 
+    # FIX: was String, should be DateTime
     last_active_at = Column(
-        String(100),
+        DateTime(timezone=True),
         nullable=True
     )
 
+    # ─────────────────────────────────────
+    # REVIEW SYSTEM
+    # ─────────────────────────────────────
+
+    average_rating = Column(
+        Float,
+        default=0
+    )
+
+    total_reviews = Column(
+        Integer,
+        default=0
+    )
+
+    # ─────────────────────────────────────
+    # RELATIONSHIPS
+    # ─────────────────────────────────────
+
     user = relationship("User")
+
+    orders = relationship(
+        "Order",
+        back_populates="driver",
+        foreign_keys="Order.driver_id"
+    )

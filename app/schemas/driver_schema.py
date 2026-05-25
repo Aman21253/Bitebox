@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 # REGISTER DRIVER
@@ -34,7 +35,8 @@ class DriverAvailabilityRequest(BaseModel):
 class DeliveryStatusUpdate(BaseModel):
     delivery_status: str
 
-class DeliveryOTPVerifyRequest(
-    BaseModel
-):
+
+# OTP VERIFY (used for OTP-based pickup/delivery confirmation)
+
+class DeliveryOTPVerifyRequest(BaseModel):
     otp: str

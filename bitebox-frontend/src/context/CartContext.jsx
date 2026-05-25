@@ -3,44 +3,21 @@ import {
   useContext,
   useEffect,
   useState,
+  useCallback,
 } from "react";
 
 import API from "../api/axios";
 
 const CartContext = createContext();
 
-export const CartProvider = ({
-  children,
-}) => {
+export const CartProvider = ({ children }) => {
 
-  const [cart, setCart] =
-    useState(null);
+  const [cart, setCart] = useState(null);
+  const [cartOpen, setCartOpen] = useState(false);
 
-  const [cartOpen, setCartOpen] =
-    useState(false);
-
-  // LOAD CART ONLY FOR CUSTOMER
-
-  useEffect(() => {
-
-    const user = JSON.parse(
-      localStorage.getItem("user")
-    );
-
-    if (
-      !user ||
-      user.role !== "customer"
-    ) {
-      return;
-    }
-
-    fetchCart();
-
-  }, []);
-
-  // FETCH CART
-
-  const fetchCart = async () => {
+  // ✅ FIXED: Wrapped in useCallback so it's stable and
+  //    can safely be used inside useEffect and addToCart
+  const fetchCart = useCallback(async () => {
 
     try {
 
@@ -48,28 +25,46 @@ export const CartProvider = ({
         localStorage.getItem("user")
       );
 
-      if (
-        !user ||
-        user.role !== "customer"
-      ) {
+      if (!user || user.role !== "customer") {
         return;
       }
 
-      const response = await API.get(
-        "/customer/cart"
-      );
+      const response = await API.get("/customer/cart");
 
-      setCart(response.data);
+      // ✅ FIXED: API returns { carts: [...] }
+      // We take the first cart since one customer
+      // has one active cart at a time
+      const carts = response.data.carts;
+
+      if (carts && carts.length > 0) {
+        setCart(carts[0]);
+      } else {
+        setCart({ items: [], total_amount: 0 });
+      }
 
     } catch (error) {
-
-      console.log(error);
-
+      console.error("fetchCart error:", error);
+      setCart({ items: [], total_amount: 0 });
     }
-  };
+
+  }, []);
+
+  // Load cart on mount for customers only
+  useEffect(() => {
+
+    const user = JSON.parse(
+      localStorage.getItem("user")
+    );
+
+    if (!user || user.role !== "customer") {
+      return;
+    }
+
+    fetchCart();
+
+  }, [fetchCart]);
 
   // ADD TO CART
-
   const addToCart = async (
     menu_item_id,
     variant_id = null,
@@ -83,71 +78,64 @@ export const CartProvider = ({
         localStorage.getItem("user")
       );
 
-      if (
-        !user ||
-        user.role !== "customer"
-      ) {
-
-        alert(
-          "Only customers can add items to cart"
-        );
-
+      if (!user || user.role !== "customer") {
+        alert("Only customers can add items to cart");
         return;
       }
 
-      await API.post(
-        "/customer/cart/add",
-        {
-          menu_item_id,
-          variant_id,
-          addon_ids,
-          quantity,
-        }
-      );
+      // ✅ FIXED: Explicit payload with null/array safety
+      const payload = {
+        menu_item_id,
+        variant_id: variant_id ?? null,
+        addon_ids: addon_ids ?? [],
+        quantity,
+      };
 
-      fetchCart();
+      await API.post("/customer/cart/add", payload);
+
+      // ✅ Refresh cart then open sidebar
+      await fetchCart();
 
       setCartOpen(true);
 
     } catch (error) {
 
+      console.error("addToCart error:", error);
+
       alert(
         error.response?.data?.detail ||
-        "Failed to add item"
+        "Failed to add item to cart"
       );
     }
   };
 
   // UPDATE QUANTITY
-
-  const updateQuantity = async (
-    cart_item_id,
-    quantity
-  ) => {
+  const updateQuantity = async (cart_item_id, quantity) => {
 
     try {
 
+      // ✅ FIXED: If quantity hits 0, remove the item instead
+      if (quantity <= 0) {
+        await removeItem(cart_item_id);
+        return;
+      }
+
       await API.put(
         `/customer/cart/item/${cart_item_id}`,
-        {
-          quantity,
-        }
+        { quantity }
       );
 
       fetchCart();
 
     } catch (error) {
 
-      console.log(error);
+      console.error("updateQuantity error:", error);
 
     }
   };
 
   // REMOVE ITEM
-
-  const removeItem = async (
-    cart_item_id
-  ) => {
+  const removeItem = async (cart_item_id) => {
 
     try {
 
@@ -159,13 +147,12 @@ export const CartProvider = ({
 
     } catch (error) {
 
-      console.log(error);
+      console.error("removeItem error:", error);
 
     }
   };
 
   return (
-
     <CartContext.Provider
       value={{
         cart,
@@ -174,14 +161,12 @@ export const CartProvider = ({
         addToCart,
         updateQuantity,
         removeItem,
+        fetchCart,
       }}
     >
-
       {children}
-
     </CartContext.Provider>
   );
 };
 
-export const useCart = () =>
-  useContext(CartContext);
+export const useCart = () => useContext(CartContext);

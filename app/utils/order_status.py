@@ -1,6 +1,6 @@
 VALID_ORDER_STATUSES = [
 
-    "placed",
+    "pending",
     "confirmed",
     "preparing",
     "ready_for_pickup",
@@ -23,24 +23,39 @@ VALID_DELIVERY_STATUSES = [
 
 ORDER_STATUS_FLOW = {
 
-    "placed": [
-        "confirmed",
-        "cancelled",
-        "rejected"
-    ],
+    # NEW ORDER
 
-    "confirmed": [
+    "pending": [
+        "confirmed",
         "preparing",
+        "ready_for_pickup",
+        "completed",
         "cancelled"
     ],
 
-    "preparing": [
-        "ready_for_pickup"
+    # CONFIRMED
+
+    "confirmed": [
+        "preparing",
+        "ready_for_pickup",
+        "completed",
+        "cancelled"
     ],
+
+    # PREPARING
+
+    "preparing": [
+        "ready_for_pickup",
+        "completed"
+    ],
+
+    # READY
 
     "ready_for_pickup": [
         "completed"
     ],
+
+    # FINAL STATES
 
     "completed": [],
 

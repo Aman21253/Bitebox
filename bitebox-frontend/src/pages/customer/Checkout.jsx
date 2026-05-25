@@ -260,7 +260,7 @@ function Checkout() {
               );
             
             navigate(
-              `/order-success/${orderResponse.data.order_id}`
+              `/order-success/${orderResponse.data.orders[0].order_id}`
             );
           
           } catch (error) {

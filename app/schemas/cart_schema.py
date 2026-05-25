@@ -8,7 +8,8 @@ class AddToCartRequest(BaseModel):
 
     variant_id: Optional[int] = None
 
-    addon_ids: Optional[List[int]] = []
+    # ✅ FIXED: Use default_factory for mutable default
+    addon_ids: Optional[List[int]] = None
 
     quantity: int = 1
 

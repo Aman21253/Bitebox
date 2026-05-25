@@ -30,6 +30,10 @@ class CartItemAddon(Base):
 
     addon_price = Column(Float, nullable=False)
 
-    cart_item = relationship("CartItem")
+    # ✅ FIXED: back_populates to match CartItem.addons
+    cart_item = relationship(
+        "CartItem",
+        back_populates="addons"
+    )
 
     addon = relationship("MenuItemAddon")

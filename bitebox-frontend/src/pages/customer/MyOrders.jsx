@@ -14,9 +14,14 @@ import {
   PackageCheck,
   Bike,
   BadgeIndianRupee,
+  Star,
 } from "lucide-react";
 
 import API from "../../api/axios";
+
+import ReviewModal from
+"../../components/reviews/ReviewModal";
+
 
 function MyOrders() {
 
@@ -27,6 +32,9 @@ function MyOrders() {
 
   const [loading, setLoading] =
     useState(true);
+
+  const [selectedOrder, setSelectedOrder] =
+    useState(null);
 
   useEffect(() => {
 
@@ -55,7 +63,9 @@ function MyOrders() {
     }
   };
 
+  // ─────────────────────────────────────────
   // REFUND REQUEST
+  // ─────────────────────────────────────────
 
   const requestRefund = async (
     orderId
@@ -95,6 +105,10 @@ function MyOrders() {
     }
   };
 
+  // ─────────────────────────────────────────
+  // STATUS COLORS
+  // ─────────────────────────────────────────
+
   const getStatusColor = (
     status
   ) => {
@@ -121,6 +135,10 @@ function MyOrders() {
     }
   };
 
+  // ─────────────────────────────────────────
+  // REFUND COLORS
+  // ─────────────────────────────────────────
+
   const getRefundColor = (
     status
   ) => {
@@ -143,6 +161,10 @@ function MyOrders() {
         return "text-gray-300 bg-white/5 border-white/10";
     }
   };
+
+  // ─────────────────────────────────────────
+  // LOADING
+  // ─────────────────────────────────────────
 
   if (loading) {
 
@@ -646,6 +668,45 @@ function MyOrders() {
 
                     </div>
 
+                    {/* REVIEW BUTTON */}
+
+                    {
+                      order.delivery_status ===
+                      "delivered" && (
+
+                        <button
+
+                          onClick={() =>
+                            setSelectedOrder(order)
+                          }
+
+                          className="
+                            w-full
+                            h-14
+                            rounded-2xl
+                            bg-yellow-500/10
+                            border
+                            border-yellow-500/20
+                            text-yellow-300
+                            font-bold
+                            hover:bg-yellow-500/20
+                            transition-all
+                            duration-300
+                            flex
+                            items-center
+                            justify-center
+                            gap-2
+                          "
+                        >
+
+                          <Star size={18} />
+
+                          Write Review
+
+                        </button>
+                      )
+                    }
+
                     {/* REFUND BUTTON */}
 
                     {
@@ -690,6 +751,31 @@ function MyOrders() {
         </div>
 
       </div>
+
+      {/* REVIEW MODAL */}
+
+      {
+        selectedOrder && (
+
+          <ReviewModal
+
+            order={selectedOrder}
+
+            onClose={() =>
+              setSelectedOrder(null)
+            }
+
+            onSuccess={() => {
+
+              console.log(
+                "Review submitted"
+              );
+
+            }}
+
+          />
+        )
+      }
 
     </div>
   );

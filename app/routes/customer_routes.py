@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
+
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 
 from app.database.db import get_db
 
@@ -24,22 +26,25 @@ router = APIRouter(
 )
 
 
-# ─────────────────────────────────────────────────────────────
-# Utility Function
-# ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# RECALCULATE CART TOTAL
+# ─────────────────────────────────────────────
 
-def recalculate_cart_total(cart_id: int, db: Session):
+def recalculate_cart_total(
+    cart_id: int,
+    db: Session
+):
 
     cart = db.query(Cart).filter(
         Cart.id == cart_id
     ).first()
 
-    cart_items = db.query(CartItem).filter(
-        CartItem.cart_id == cart_id
-    ).all()
+    if not cart:
+        return 0
 
     total = sum(
-        item.total_price for item in cart_items
+        item.total_price
+        for item in cart.items
     )
 
     cart.total_amount = total
@@ -49,38 +54,42 @@ def recalculate_cart_total(cart_id: int, db: Session):
     return total
 
 
-# ─────────────────────────────────────────────────────────────
-# Customer Dashboard
-# ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# CUSTOMER DASHBOARD
+# ─────────────────────────────────────────────
 
 @router.get("/dashboard")
 def customer_dashboard(
+
     current_user=Depends(
         require_role(["customer"])
     )
+
 ):
 
     return {
-        "message": f"Welcome Customer {current_user.name}"
+        "message":
+        f"Welcome Customer {current_user.name}"
     }
 
 
-# ─────────────────────────────────────────────────────────────
-# Add To Cart
-# ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# ADD TO CART
+# ─────────────────────────────────────────────
 
 @router.post("/cart/add")
 def add_to_cart(
+
     body: AddToCartRequest,
+
     current_user=Depends(
         require_role(["customer"])
     ),
+
     db: Session = Depends(get_db)
 ):
 
-    # ─────────────────────────────────────────────────
-    # Quantity Validation
-    # ─────────────────────────────────────────────────
+    # VALIDATE QUANTITY
 
     if body.quantity <= 0:
 
@@ -89,13 +98,14 @@ def add_to_cart(
             detail="Quantity must be greater than 0"
         )
 
-    # ─────────────────────────────────────────────────
-    # Menu Item Validation
-    # ─────────────────────────────────────────────────
+    # GET MENU ITEM
 
     menu_item = db.query(MenuItem).filter(
+
         MenuItem.id == body.menu_item_id,
+
         MenuItem.is_available == True
+
     ).first()
 
     if not menu_item:
@@ -105,140 +115,185 @@ def add_to_cart(
             detail="Menu item not found"
         )
 
-    # ─────────────────────────────────────────────────
-    # Get/Create Cart
-    # ─────────────────────────────────────────────────
+    # FIND EXISTING CART OF SAME RESTAURANT
 
-    existing_cart = db.query(Cart).filter(
-        Cart.customer_id == current_user.id
+    cart = db.query(Cart).filter(
+
+        Cart.customer_id == current_user.id,
+
+        Cart.restaurant_id ==
+        menu_item.restaurant_id
+
     ).first()
 
-    # ─────────────────────────────────────────────────
-    # Restaurant Conflict Validation
-    # ─────────────────────────────────────────────────
+    # CREATE CART
 
-    if existing_cart:
+    if not cart:
 
-        if existing_cart.restaurant_id != menu_item.restaurant_id:
+        cart = Cart(
 
-            raise HTTPException(
-                status_code=400,
-                detail="You can only order from one restaurant at a time"
-            )
-
-    else:
-
-        existing_cart = Cart(
             customer_id=current_user.id,
-            restaurant_id=menu_item.restaurant_id,
+
+            restaurant_id=
+            menu_item.restaurant_id,
+
             total_amount=0
         )
 
-        db.add(existing_cart)
-        db.commit()
-        db.refresh(existing_cart)
+        db.add(cart)
 
-    # ─────────────────────────────────────────────────
-    # Variant Pricing
-    # ─────────────────────────────────────────────────
+        db.commit()
+
+        db.refresh(cart)
+
+    # VARIANT PRICE
 
     item_price = menu_item.base_price
 
-    selected_variant = None
-
     if body.variant_id:
 
-        selected_variant = db.query(MenuItemVariant).filter(
-            MenuItemVariant.id == body.variant_id,
-            MenuItemVariant.menu_item_id == menu_item.id
+        variant = db.query(
+            MenuItemVariant
+        ).filter(
+
+            MenuItemVariant.id ==
+            body.variant_id,
+
+            MenuItemVariant.menu_item_id ==
+            menu_item.id
+
         ).first()
 
-        if not selected_variant:
+        if not variant:
 
             raise HTTPException(
                 status_code=404,
                 detail="Variant not found"
             )
 
-        item_price = selected_variant.price
+        item_price = variant.price
 
-    # ─────────────────────────────────────────────────
-    # Addon Pricing
-    # ─────────────────────────────────────────────────
-
-    addon_total = 0
+    # ADDONS
 
     addons = []
 
+    addon_total = 0
+
     if body.addon_ids:
 
-        addons = db.query(MenuItemAddon).filter(
-            MenuItemAddon.id.in_(body.addon_ids),
-            MenuItemAddon.menu_item_id == menu_item.id
+        addons = db.query(
+            MenuItemAddon
+        ).filter(
+
+            MenuItemAddon.id.in_(
+                body.addon_ids
+            ),
+
+            MenuItemAddon.menu_item_id ==
+            menu_item.id
+
         ).all()
 
         addon_total = sum(
-            addon.price for addon in addons
+            addon.price
+            for addon in addons
         )
 
+    # FINAL PRICE
+
     final_price = (
-        item_price + addon_total
+
+        item_price +
+
+        addon_total
+
     ) * body.quantity
 
-    # ─────────────────────────────────────────────────
-    # Check Existing Cart Item
-    # ─────────────────────────────────────────────────
+    # CHECK EXISTING CART ITEM
 
-    existing_cart_item = db.query(CartItem).filter(
-        CartItem.cart_id == existing_cart.id,
-        CartItem.menu_item_id == menu_item.id,
-        CartItem.variant_id == body.variant_id
+    existing_item = db.query(
+        CartItem
+    ).filter(
+
+        CartItem.cart_id == cart.id,
+
+        CartItem.menu_item_id ==
+        menu_item.id,
+
+        CartItem.variant_id ==
+        body.variant_id
+
     ).first()
 
-    if existing_cart_item:
+    # UPDATE EXISTING ITEM
 
-        existing_cart_item.quantity += body.quantity
+    if existing_item:
 
-        existing_cart_item.total_price += final_price
+        existing_item.quantity += (
+            body.quantity
+        )
+
+        existing_item.total_price += (
+            final_price
+        )
 
         db.commit()
 
         total = recalculate_cart_total(
-            existing_cart.id,
+            cart.id,
             db
         )
 
         return {
-            "message": "Cart updated successfully",
-            "cart_total": total
+
+            "message":
+            "Cart updated successfully",
+
+            "cart_id":
+            cart.id,
+
+            "restaurant_id":
+            cart.restaurant_id,
+
+            "cart_total":
+            total
         }
 
-    # ─────────────────────────────────────────────────
-    # Create Cart Item
-    # ─────────────────────────────────────────────────
-
+    # ✅ FIXED: Added restaurant_id to CartItem
     cart_item = CartItem(
-        cart_id=existing_cart.id,
+
+        cart_id=cart.id,
+
+        restaurant_id=
+        menu_item.restaurant_id,
+
         menu_item_id=menu_item.id,
+
         variant_id=body.variant_id,
+
         quantity=body.quantity,
+
         item_price=item_price,
+
         total_price=final_price
     )
 
     db.add(cart_item)
+
     db.commit()
+
     db.refresh(cart_item)
 
-    # ─────────────────────────────────────────────────
-    # Save Addons
-    # ─────────────────────────────────────────────────
+    # SAVE ADDONS
 
     for addon in addons:
 
         cart_addon = CartItemAddon(
+
             cart_item_id=cart_item.id,
+
             addon_id=addon.id,
+
             addon_price=addon.price
         )
 
@@ -246,116 +301,188 @@ def add_to_cart(
 
     db.commit()
 
-    # ─────────────────────────────────────────────────
-    # Update Cart Total
-    # ─────────────────────────────────────────────────
+    # RECALCULATE TOTAL
 
     total = recalculate_cart_total(
-        existing_cart.id,
+        cart.id,
         db
     )
 
     return {
-        "message": "Item added to cart successfully",
-        "cart_total": total
+
+        "message":
+        "Item added successfully",
+
+        "cart_id":
+        cart.id,
+
+        "restaurant_id":
+        cart.restaurant_id,
+
+        "cart_total":
+        total
     }
 
 
-# ─────────────────────────────────────────────────────────────
-# Get Cart
-# ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# GET ALL CARTS
+# ─────────────────────────────────────────────
 
 @router.get("/cart")
 def get_cart(
+
     current_user=Depends(
         require_role(["customer"])
     ),
+
     db: Session = Depends(get_db)
 ):
 
-    cart = db.query(Cart).filter(
+    carts = db.query(Cart).options(
+
+        joinedload(Cart.items)
+
+    ).filter(
+
         Cart.customer_id == current_user.id
-    ).first()
 
-    if not cart:
-
-        return {
-            "message": "Cart is empty"
-        }
-
-    cart_items = db.query(CartItem).filter(
-        CartItem.cart_id == cart.id
     ).all()
 
-    formatted_items = []
+    if not carts:
 
-    for item in cart_items:
+        return {
+            "message": "Cart is empty",
+            "carts": []
+        }
 
-        menu_item = db.query(MenuItem).filter(
-            MenuItem.id == item.menu_item_id
-        ).first()
+    formatted_carts = []
 
-        variant_name = None
+    for cart in carts:
 
-        if item.variant_id:
+        items_data = []
 
-            variant = db.query(MenuItemVariant).filter(
-                MenuItemVariant.id == item.variant_id
+        for item in cart.items:
+
+            menu_item = db.query(
+                MenuItem
+            ).filter(
+                MenuItem.id == item.menu_item_id
             ).first()
 
-            if variant:
-                variant_name = variant.name
+            variant_name = None
 
-        addons = db.query(CartItemAddon).filter(
-            CartItemAddon.cart_item_id == item.id
-        ).all()
+            if item.variant_id:
 
-        addon_data = []
+                variant = db.query(
+                    MenuItemVariant
+                ).filter(
 
-        for addon in addons:
+                    MenuItemVariant.id ==
+                    item.variant_id
 
-            addon_item = db.query(MenuItemAddon).filter(
-                MenuItemAddon.id == addon.addon_id
-            ).first()
+                ).first()
 
-            if addon_item:
+                if variant:
+                    variant_name = variant.name
 
-                addon_data.append({
-                    "addon_id": addon_item.id,
-                    "addon_name": addon_item.name,
-                    "addon_price": addon_item.price
-                })
+            addons = db.query(
+                CartItemAddon
+            ).filter(
 
-        formatted_items.append({
-            "cart_item_id": item.id,
-            "menu_item_id": menu_item.id,
-            "item_name": menu_item.name,
-            "variant_name": variant_name,
-            "quantity": item.quantity,
-            "item_price": item.item_price,
-            "total_price": item.total_price,
-            "addons": addon_data
+                CartItemAddon.cart_item_id ==
+                item.id
+
+            ).all()
+
+            addon_data = []
+
+            for addon in addons:
+
+                addon_item = db.query(
+                    MenuItemAddon
+                ).filter(
+
+                    MenuItemAddon.id ==
+                    addon.addon_id
+
+                ).first()
+
+                if addon_item:
+
+                    addon_data.append({
+
+                        "addon_id":
+                        addon_item.id,
+
+                        "addon_name":
+                        addon_item.name,
+
+                        "addon_price":
+                        addon_item.price
+                    })
+
+            items_data.append({
+
+                "cart_item_id":
+                item.id,
+
+                "menu_item_id":
+                menu_item.id,
+
+                "item_name":
+                menu_item.name,
+
+                "variant_name":
+                variant_name,
+
+                "quantity":
+                item.quantity,
+
+                "item_price":
+                item.item_price,
+
+                "total_price":
+                item.total_price,
+
+                "addons":
+                addon_data
+            })
+
+        formatted_carts.append({
+
+            "cart_id":
+            cart.id,
+
+            "restaurant_id":
+            cart.restaurant_id,
+
+            "total_amount":
+            cart.total_amount,
+
+            "items":
+            items_data
         })
 
     return {
-        "cart_id": cart.id,
-        "restaurant_id": cart.restaurant_id,
-        "total_amount": cart.total_amount,
-        "items": formatted_items
+        "carts": formatted_carts
     }
 
 
-# ─────────────────────────────────────────────────────────────
-# Update Quantity
-# ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# UPDATE CART ITEM QUANTITY
+# ─────────────────────────────────────────────
 
 @router.put("/cart/item/{cart_item_id}")
 def update_cart_quantity(
+
     cart_item_id: int,
+
     body: UpdateCartQuantityRequest,
+
     current_user=Depends(
         require_role(["customer"])
     ),
+
     db: Session = Depends(get_db)
 ):
 
@@ -366,20 +493,14 @@ def update_cart_quantity(
             detail="Quantity must be greater than 0"
         )
 
-    cart = db.query(Cart).filter(
-        Cart.customer_id == current_user.id
-    ).first()
+    cart_item = db.query(CartItem).join(
+        Cart
+    ).filter(
 
-    if not cart:
+        Cart.customer_id == current_user.id,
 
-        raise HTTPException(
-            status_code=404,
-            detail="Cart not found"
-        )
+        CartItem.id == cart_item_id
 
-    cart_item = db.query(CartItem).filter(
-        CartItem.id == cart_item_id,
-        CartItem.cart_id == cart.id
     ).first()
 
     if not cart_item:
@@ -389,56 +510,58 @@ def update_cart_quantity(
             detail="Cart item not found"
         )
 
-    single_item_price = (
-        cart_item.total_price / cart_item.quantity
+    single_price = (
+        cart_item.total_price /
+        cart_item.quantity
     )
 
     cart_item.quantity = body.quantity
 
     cart_item.total_price = (
-        single_item_price * body.quantity
+        single_price * body.quantity
     )
 
     db.commit()
 
     total = recalculate_cart_total(
-        cart.id,
+        cart_item.cart_id,
         db
     )
 
     return {
-        "message": "Quantity updated successfully",
-        "cart_total": total
+
+        "message":
+        "Quantity updated successfully",
+
+        "cart_total":
+        total
     }
 
 
-# ─────────────────────────────────────────────────────────────
-# Remove Item From Cart
-# ─────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────
+# REMOVE CART ITEM
+# ─────────────────────────────────────────────
 
 @router.delete("/cart/item/{cart_item_id}")
 def remove_cart_item(
+
     cart_item_id: int,
+
     current_user=Depends(
         require_role(["customer"])
     ),
+
     db: Session = Depends(get_db)
 ):
 
-    cart = db.query(Cart).filter(
-        Cart.customer_id == current_user.id
-    ).first()
+    cart_item = db.query(CartItem).join(
+        Cart
+    ).filter(
 
-    if not cart:
+        Cart.customer_id == current_user.id,
 
-        raise HTTPException(
-            status_code=404,
-            detail="Cart not found"
-        )
+        CartItem.id == cart_item_id
 
-    cart_item = db.query(CartItem).filter(
-        CartItem.id == cart_item_id,
-        CartItem.cart_id == cart.id
     ).first()
 
     if not cart_item:
@@ -448,34 +571,56 @@ def remove_cart_item(
             detail="Cart item not found"
         )
 
+    cart_id = cart_item.cart_id
+
     db.query(CartItemAddon).filter(
-        CartItemAddon.cart_item_id == cart_item.id
+
+        CartItemAddon.cart_item_id ==
+        cart_item.id
+
     ).delete()
 
     db.delete(cart_item)
 
     db.commit()
 
-    remaining_items = db.query(CartItem).filter(
-        CartItem.cart_id == cart.id
-    ).all()
+    remaining_items = db.query(
+        CartItem
+    ).filter(
 
-    if not remaining_items:
+        CartItem.cart_id == cart_id
 
-        db.delete(cart)
+    ).count()
 
-        db.commit()
+    # DELETE EMPTY CART
+
+    if remaining_items == 0:
+
+        cart = db.query(Cart).filter(
+            Cart.id == cart_id
+        ).first()
+
+        if cart:
+
+            db.delete(cart)
+
+            db.commit()
 
         return {
-            "message": "Cart cleared"
+            "message":
+            "Cart cleared successfully"
         }
 
     total = recalculate_cart_total(
-        cart.id,
+        cart_id,
         db
     )
 
     return {
-        "message": "Item removed successfully",
-        "cart_total": total
+
+        "message":
+        "Item removed successfully",
+
+        "cart_total":
+        total
     }

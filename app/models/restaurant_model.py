@@ -28,7 +28,9 @@ class Restaurant(Base):
         nullable=False
     )
 
+    # ─────────────────────────────────────
     # BASIC INFO
+    # ─────────────────────────────────────
 
     name = Column(
         String(150),
@@ -60,7 +62,9 @@ class Restaurant(Base):
         nullable=False
     )
 
+    # ─────────────────────────────────────
     # LOCATION
+    # ─────────────────────────────────────
 
     address = Column(
         String(300),
@@ -92,7 +96,9 @@ class Restaurant(Base):
         nullable=True
     )
 
+    # ─────────────────────────────────────
     # DELIVERY
+    # ─────────────────────────────────────
 
     delivery_radius = Column(
         Float,
@@ -114,7 +120,9 @@ class Restaurant(Base):
         default=30
     )
 
+    # ─────────────────────────────────────
     # OPEN/CLOSE
+    # ─────────────────────────────────────
 
     is_open = Column(
         Boolean,
@@ -131,7 +139,9 @@ class Restaurant(Base):
         default="11:00 PM"
     )
 
+    # ─────────────────────────────────────
     # APPROVAL FLOW
+    # ─────────────────────────────────────
 
     approval_status = Column(
         String(50),
@@ -149,14 +159,32 @@ class Restaurant(Base):
         nullable=True
     )
 
+    # ─────────────────────────────────────
     # STATUS
+    # ─────────────────────────────────────
 
     status = Column(
         String(50),
         default="active"
     )
 
+    # ─────────────────────────────────────
+    # REVIEW SYSTEM
+    # ─────────────────────────────────────
+
+    average_rating = Column(
+        Float,
+        default=0
+    )
+
+    total_reviews = Column(
+        Integer,
+        default=0
+    )
+
+    # ─────────────────────────────────────
     # RELATIONSHIP
+    # ─────────────────────────────────────
 
     owner = relationship(
         "User",

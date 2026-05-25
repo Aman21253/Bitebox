@@ -6,6 +6,7 @@ from app.database.db import (
     Base
 )
 
+# MODELS
 
 from app.models.user_model import User
 from app.models.otp_model import OtpToken
@@ -24,6 +25,15 @@ from app.models.menu_item_addon_model import MenuItemAddon
 from app.models.order_model import Order
 from app.models.order_item_model import OrderItem
 from app.models.order_item_addon_model import OrderItemAddon
+
+from app.models.driver_model import Driver
+from app.models.refund_model import Refund
+from app.models.coupon_model import Coupon
+from app.models.coupon_usage_model import CouponUsage
+from app.models.notification_model import Notification
+from app.models.review_model import Review
+
+# ROUTES
 
 from app.routes.auth_routes import (
     router as auth_router
@@ -89,25 +99,28 @@ from app.routes.payment_routes import (
     router as payment_router
 )
 
-from app.routes.restaurant_order_routes import (
-    router as restaurant_order_router
-)
-
 from app.routes.admin_restaurant_routes import (
     router as admin_restaurant_router
 )
-from app.models.refund_model import Refund
+
 from app.routes.refund_routes import (
     router as refund_router
 )
-from app.models.coupon_model import Coupon
-from app.models.coupon_usage_model import CouponUsage
+
 from app.routes.coupon_routes import (
     router as coupon_router
 )
-from app.models.notification_model import Notification
+
 from app.routes.notification_routes import (
     router as notification_router
+)
+
+from app.routes.address_routes import (
+    router as address_router
+)
+
+from app.routes.review_routes import (
+    router as review_router
 )
 
 # FASTAPI APP
@@ -116,6 +129,7 @@ app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 
+# CORS
 
 app.add_middleware(
 
@@ -155,14 +169,13 @@ app.include_router(websocket_router)
 app.include_router(upload_router)
 app.include_router(payment_router)
 app.include_router(
-    restaurant_order_router
-)
-app.include_router(refund_router)
-app.include_router(
     admin_restaurant_router
 )
+app.include_router(refund_router)
 app.include_router(coupon_router)
 app.include_router(notification_router)
+app.include_router(address_router)
+app.include_router(review_router)
 
 # HOME
 
@@ -170,7 +183,8 @@ app.include_router(notification_router)
 def home():
 
     return {
-        "message": "Bitebox Backend Running"
+        "message":
+        "Bitebox Backend Running"
     }
 
 
@@ -180,5 +194,6 @@ def home():
 def health_check():
 
     return {
-        "status": "ok"
+        "status":
+        "ok"
     }

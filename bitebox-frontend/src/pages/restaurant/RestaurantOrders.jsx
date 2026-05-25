@@ -7,12 +7,17 @@ import {
   ClipboardList,
   RefreshCcw,
 } from "lucide-react";
+
 import API from "../../api/axios";
+
 import RestaurantSidebar from "../../components/restaurant/RestaurantSidebar";
+
 import OrderCard from "../../components/restaurant/OrderCard";
+
 import {
   createTrackingSocket
 } from "../../socket/socket";
+
 
 function RestaurantOrders() {
 
@@ -22,7 +27,44 @@ function RestaurantOrders() {
   const [loading, setLoading] =
     useState(true);
 
+  // ─────────────────────────────────────────
+  // FETCH ORDERS
+  // ─────────────────────────────────────────
+
+  const fetchOrders = async () => {
+
+    try {
+
+      const response = await API.get(
+        "/restaurant/orders"
+      );
+
+      if (
+        Array.isArray(response.data)
+      ) {
+
+        setOrders(response.data);
+
+      } else {
+
+        setOrders([]);
+      }
+
+    } catch (error) {
+
+      console.log(error);
+
+      setOrders([]);
+
+    } finally {
+
+      setLoading(false);
+    }
+  };
+
+  // ─────────────────────────────────────────
   // INITIAL FETCH
+  // ─────────────────────────────────────────
 
   useEffect(() => {
 
@@ -30,25 +72,39 @@ function RestaurantOrders() {
 
   }, []);
 
+  // ─────────────────────────────────────────
   // REALTIME SOCKET
+  // ─────────────────────────────────────────
 
   useEffect(() => {
+
+    // CREATE SOCKET
+
+    const socket =
+      createTrackingSocket(
+        "restaurant"
+      );
 
     // CONNECTED
 
     socket.onopen = () => {
 
-      setInterval(() => {
-        if (
-          socket.readyState === 1
-        ) {
-          socket.send("ping");
-        }
-      }, 30000);
-
       console.log(
         "✅ WebSocket Connected"
       );
+
+      // KEEP ALIVE
+
+      setInterval(() => {
+
+        if (
+          socket.readyState === 1
+        ) {
+
+          socket.send("ping");
+        }
+
+      }, 30000);
     };
 
     // RECEIVE EVENTS
@@ -74,7 +130,7 @@ function RestaurantOrders() {
 
         await fetchOrders();
 
-        // OPTIONAL SOUND
+        // SOUND
 
         const audio = new Audio(
           "/notification.mp3"
@@ -82,7 +138,7 @@ function RestaurantOrders() {
 
         audio.play();
 
-        // OPTIONAL ALERT
+        // ALERT
 
         alert(
           "🔥 New Order Received!"
@@ -123,45 +179,14 @@ function RestaurantOrders() {
 
     return () => {
 
-      socket.onmessage = null;
+      socket.close();
     };
 
   }, []);
 
-  // FETCH ORDERS
-
-  const fetchOrders = async () => {
-
-    try {
-
-      const response = await API.get(
-        "/restaurant/orders"
-      );
-
-      if (
-        Array.isArray(response.data)
-      ) {
-
-        setOrders(response.data);
-
-      } else {
-
-        setOrders([]);
-      }
-
-    } catch (error) {
-
-      console.log(error);
-
-      setOrders([]);
-
-    } finally {
-
-      setLoading(false);
-    }
-  };
-
+  // ─────────────────────────────────────────
   // UPDATE ORDER STATUS
+  // ─────────────────────────────────────────
 
   const updateStatus = async (
     orderId,
@@ -185,7 +210,9 @@ function RestaurantOrders() {
     }
   };
 
+  // ─────────────────────────────────────────
   // AUTO ASSIGN DRIVER
+  // ─────────────────────────────────────────
 
   const autoAssignDriver = async (
     orderId

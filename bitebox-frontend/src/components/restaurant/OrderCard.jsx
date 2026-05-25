@@ -7,9 +7,13 @@ import {
 import OrderStatusBadge from "./OrderStatusBadge";
 
 function OrderCard({
+
   order,
+
   updateStatus,
+
   autoAssignDriver,
+
 }) {
 
   return (
@@ -170,10 +174,12 @@ function OrderCard({
             font-bold
             capitalize
           ">
+
             {
-              order.delivery_status ||
-              "pending"
+              order.delivery_status
+                ?.replaceAll("_", " ")
             }
+
           </h3>
 
         </div>
@@ -235,88 +241,173 @@ function OrderCard({
         mt-7
       ">
 
-        <button
-          onClick={() =>
-            updateStatus(
-              order.id,
-              "confirmed"
-            )
-          }
-          className="
-            px-5
-            py-3
-            rounded-2xl
-            bg-blue-500/10
-            border
-            border-blue-500/20
-            text-blue-300
-            font-bold
-          "
-        >
-          Confirm
-        </button>
+        {/* PENDING -> CONFIRMED */}
 
-        <button
-          onClick={() =>
-            updateStatus(
-              order.id,
-              "preparing"
-            )
-          }
-          className="
-            px-5
-            py-3
-            rounded-2xl
-            bg-orange-500/10
-            border
-            border-orange-500/20
-            text-orange-300
-            font-bold
-          "
-        >
-          Preparing
-        </button>
+        {
+          order.status ===
+          "pending" && (
 
-        <button
-          onClick={() =>
-            updateStatus(
-              order.id,
-              "ready_for_pickup"
-            )
-          }
-          className="
-            px-5
-            py-3
-            rounded-2xl
-            bg-green-500/10
-            border
-            border-green-500/20
-            text-green-300
-            font-bold
-          "
-        >
-          Ready For Pickup
-        </button>
+            <button
+              onClick={() => {
 
-        <button
-          onClick={() =>
-            autoAssignDriver(
-              order.id
-            )
-          }
-          className="
-            px-5
-            py-3
-            rounded-2xl
-            bg-white/[0.05]
-            border
-            border-white/10
-            text-white
-            font-bold
-          "
-        >
-          Auto Assign Driver
-        </button>
+                console.log(
+                  "CONFIRMED CLICKED"
+                );
+
+                updateStatus(
+                  order.id,
+                  "confirmed"
+                );
+              }}
+              className="
+                px-5
+                py-3
+                rounded-2xl
+                bg-blue-500/10
+                border
+                border-blue-500/20
+                text-blue-300
+                font-bold
+                hover:bg-blue-500/20
+                transition
+              "
+            >
+              Confirm
+            </button>
+          )
+        }
+
+        {/* CONFIRMED -> PREPARING */}
+
+        {
+          order.status ===
+          "confirmed" && (
+
+            <button
+              onClick={() => {
+
+                console.log(
+                  "PREPARING CLICKED"
+                );
+
+                updateStatus(
+                  order.id,
+                  "preparing"
+                );
+              }}
+              className="
+                px-5
+                py-3
+                rounded-2xl
+                bg-orange-500/10
+                border
+                border-orange-500/20
+                text-orange-300
+                font-bold
+                hover:bg-orange-500/20
+                transition
+              "
+            >
+              Preparing
+            </button>
+          )
+        }
+
+        {/* PREPARING -> READY */}
+
+        {
+          order.status ===
+          "preparing" && (
+
+            <button
+              onClick={() => {
+
+                console.log(
+                  "READY CLICKED"
+                );
+
+                updateStatus(
+                  order.id,
+                  "ready_for_pickup"
+                );
+              }}
+              className="
+                px-5
+                py-3
+                rounded-2xl
+                bg-green-500/10
+                border
+                border-green-500/20
+                text-green-300
+                font-bold
+                hover:bg-green-500/20
+                transition
+              "
+            >
+              Ready For Pickup
+            </button>
+          )
+        }
+
+        {/* READY -> COMPLETE */}
+
+        {
+          order.status ===
+          "ready_for_pickup" && (
+
+            <>
+              <button
+                onClick={() => {
+
+                  console.log(
+                    "COMPLETE CLICKED"
+                  );
+
+                  updateStatus(
+                    order.id,
+                    "completed"
+                  );
+                }}
+                className="
+                  px-5
+                  py-3
+                  rounded-2xl
+                  bg-purple-500/10
+                  border
+                  border-purple-500/20
+                  text-purple-300
+                  font-bold
+                  hover:bg-purple-500/20
+                  transition
+                "
+              >
+                Complete Order
+              </button>
+
+              <button
+                onClick={() =>
+                  autoAssignDriver(
+                    order.id
+                  )
+                }
+                className="
+                  px-5
+                  py-3
+                  rounded-2xl
+                  bg-white/[0.05]
+                  border
+                  border-white/10
+                  text-white
+                  font-bold
+                  hover:bg-white/10
+                  transition
+                "
+              >
+                Auto Assign Driver
+              </button>
+            </>
+          )
+        }
 
       </div>
 

@@ -70,7 +70,9 @@ class MenuItem(Base):
         default=15
     )
 
-    # NEW FIELDS
+    # ─────────────────────────────────────
+    # EXTRA INFO
+    # ─────────────────────────────────────
 
     calories = Column(
         Integer,
@@ -106,6 +108,24 @@ class MenuItem(Base):
         Boolean,
         default=False
     )
+
+    # ─────────────────────────────────────
+    # REVIEW SYSTEM
+    # ─────────────────────────────────────
+
+    average_rating = Column(
+        Float,
+        default=0
+    )
+
+    total_reviews = Column(
+        Integer,
+        default=0
+    )
+
+    # ─────────────────────────────────────
+    # RELATIONSHIPS
+    # ─────────────────────────────────────
 
     restaurant = relationship(
         "Restaurant"

@@ -12,7 +12,41 @@ router = APIRouter()
 
 
 # ─────────────────────────────────────────────
-# LIVE ORDER TRACKING SOCKET
+# RESTAURANT LIVE SOCKET
+# ─────────────────────────────────────────────
+
+@router.websocket(
+    "/ws/order-tracking/restaurant"
+)
+async def restaurant_socket(
+
+    websocket: WebSocket
+
+):
+
+    await websocket.accept()
+
+    print(
+        "✅ Restaurant socket connected"
+    )
+
+    try:
+
+        while True:
+
+            # KEEP CONNECTION ALIVE
+
+            await websocket.receive_text()
+
+    except WebSocketDisconnect:
+
+        print(
+            "❌ Restaurant socket disconnected"
+        )
+
+
+# ─────────────────────────────────────────────
+# DRIVER LIVE TRACKING SOCKET
 # ─────────────────────────────────────────────
 
 @router.websocket(

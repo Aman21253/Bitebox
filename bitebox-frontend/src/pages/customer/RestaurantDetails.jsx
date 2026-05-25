@@ -23,7 +23,7 @@ import {
   useCart,
 } from "../../context/CartContext";
 
-import CartSidebar from "../../components/cart/CartSidebar";
+import CartSidebar from "../../components/customer/CartSidebar";
 
 function RestaurantDetails() {
 

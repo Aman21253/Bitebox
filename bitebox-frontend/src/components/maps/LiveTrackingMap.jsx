@@ -29,6 +29,8 @@ function LiveTrackingMap({
   const [distance, setDistance] =
     useState("");
 
+  // LOAD GOOGLE MAPS
+
   const { isLoaded } =
     useJsApiLoader({
 
@@ -36,6 +38,7 @@ function LiveTrackingMap({
         import.meta.env
           .VITE_GOOGLE_MAPS_API_KEY,
 
+      libraries: ["routes"],
     });
 
   // ─────────────────────────────────────
@@ -45,10 +48,15 @@ function LiveTrackingMap({
   useEffect(() => {
 
     if (
+      !isLoaded ||
       !driverLocation ||
       !customerLocation ||
-      !window.google
-    ) return;
+      !window.google ||
+      !window.google.maps ||
+      !window.google.maps.DirectionsService
+    ) {
+      return;
+    }
 
     const directionsService =
       new window.google.maps.DirectionsService();
@@ -89,6 +97,7 @@ function LiveTrackingMap({
 
   }, [
 
+    isLoaded,
     driverLocation,
     customerLocation
 
