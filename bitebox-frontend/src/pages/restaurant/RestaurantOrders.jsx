@@ -7,14 +7,12 @@ import {
   ClipboardList,
   RefreshCcw,
 } from "lucide-react";
-
 import API from "../../api/axios";
-
 import RestaurantSidebar from "../../components/restaurant/RestaurantSidebar";
-
 import OrderCard from "../../components/restaurant/OrderCard";
-
-import socket from "../../socket/socket";
+import {
+  createTrackingSocket
+} from "../../socket/socket";
 
 function RestaurantOrders() {
 

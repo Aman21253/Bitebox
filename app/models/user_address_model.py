@@ -4,10 +4,13 @@ from sqlalchemy import (
     String,
     Boolean,
     Float,
-    ForeignKey
+    ForeignKey,
+    DateTime
 )
 
 from sqlalchemy.orm import relationship
+
+from datetime import datetime
 
 from app.database.db import Base
 
@@ -16,7 +19,11 @@ class UserAddress(Base):
 
     __tablename__ = "user_addresses"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
     user_id = Column(
         Integer,
@@ -24,22 +31,89 @@ class UserAddress(Base):
         nullable=False
     )
 
-    label = Column(String(50), nullable=False)
+    # ─────────────────────────────────────
+    # ADDRESS INFO
+    # ─────────────────────────────────────
 
-    address_line = Column(String(300), nullable=False)
+    full_name = Column(
+        String(150),
+        nullable=False
+    )
 
-    landmark = Column(String(200), nullable=True)
+    phone = Column(
+        String(20),
+        nullable=False
+    )
 
-    city = Column(String(100), nullable=False)
+    label = Column(
+        String(50),
+        nullable=False
+    )
 
-    state = Column(String(100), nullable=False)
+    address_line_1 = Column(
+        String(300),
+        nullable=False
+    )
 
-    pincode = Column(String(20), nullable=False)
+    address_line_2 = Column(
+        String(300),
+        nullable=True
+    )
 
-    latitude = Column(Float, nullable=True)
+    landmark = Column(
+        String(200),
+        nullable=True
+    )
 
-    longitude = Column(Float, nullable=True)
+    city = Column(
+        String(100),
+        nullable=False
+    )
 
-    is_default = Column(Boolean, default=False)
+    state = Column(
+        String(100),
+        nullable=False
+    )
+
+    pincode = Column(
+        String(20),
+        nullable=False
+    )
+
+    # ─────────────────────────────────────
+    # GPS
+    # ─────────────────────────────────────
+
+    latitude = Column(
+        Float,
+        nullable=True
+    )
+
+    longitude = Column(
+        Float,
+        nullable=True
+    )
+
+    # ─────────────────────────────────────
+    # DEFAULT ADDRESS
+    # ─────────────────────────────────────
+
+    is_default = Column(
+        Boolean,
+        default=False
+    )
+
+    # ─────────────────────────────────────
+    # TIMESTAMP
+    # ─────────────────────────────────────
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    # ─────────────────────────────────────
+    # RELATIONSHIP
+    # ─────────────────────────────────────
 
     user = relationship("User")

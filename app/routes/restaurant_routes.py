@@ -9,11 +9,8 @@ from sqlalchemy import func
 
 from datetime import datetime
 
-from datetime import datetime
-
-from app.services.dispatch_service import (
-    auto_assign_driver
-)
+from app.database import db
+from app.database.db import get_db
 
 from app.middleware.role_middleware import (
     require_role
@@ -22,9 +19,9 @@ from app.middleware.role_middleware import (
 from app.middleware.restaurant_approval_middleware import (
     require_approved_restaurant
 )
-
-from app.database.db import get_db
-
+from app.services.notification_service import (
+    create_notification
+)
 from app.models.restaurant_model import Restaurant
 from app.models.order_model import Order
 from app.models.user_model import User
@@ -36,6 +33,10 @@ from app.schemas.order_status_schema import (
 
 from app.utils.order_status import (
     ORDER_STATUS_FLOW
+)
+
+from app.services.dispatch_service import (
+    auto_assign_driver
 )
 
 from app.websockets.connection_manager import (
@@ -291,40 +292,52 @@ async def update_order_status(
         order.ready_for_pickup_at = (
             datetime.utcnow()
         )
+
         order.delivery_status = (
             "waiting_for_driver"
         )
+
         order.driver_request_sent_at = (
             datetime.utcnow()
         )
+
         order.declined_driver_ids = []
+
         db.commit()
+
         db.refresh(order)
 
-        # AUTO ASSIGN NEAREST DRIVER
+        # AUTO ASSIGN DRIVER
 
         assigned_driver = auto_assign_driver(
             db,
             order
         )
+
         if assigned_driver:
 
-            await manager.broadcast({
+            await manager.send_order_update(
 
-                "type":
-                "driver_auto_assigned",
-
-                "order_id":
                 order.id,
 
-                "driver_id":
-                assigned_driver.id
+                {
 
-            })
+                    "type":
+                    "driver_auto_assigned",
+
+                    "order_id":
+                    order.id,
+
+                    "driver_id":
+                    assigned_driver.id
+                }
+            )
 
     elif body.status == "completed":
 
         order.delivered_at = datetime.utcnow()
+
+        order.delivery_status = "delivered"
 
     elif body.status == "cancelled":
 
@@ -345,25 +358,41 @@ async def update_order_status(
     db.commit()
 
     db.refresh(order)
+    # ─────────────────────────────────────
+    # CUSTOMER NOTIFICATION
+    # ─────────────────────────────────────
+
+    await create_notification(
+        db=db,
+        user_id=order.customer_id,
+        title="Order Status Updated",
+        message=f"Your order is now {order.status}",
+        notification_type="order_update"
+    )
 
     # ─────────────────────────────────────
-    # REALTIME SOCKET EVENT
+    # REALTIME EVENT
     # ─────────────────────────────────────
 
-    await manager.broadcast({
+    await manager.send_order_update(
 
-        "type":
-        "order_status_updated",
-
-        "order_id":
         order.id,
 
-        "status":
-        order.status,
+        {
 
-        "delivery_status":
-        order.delivery_status
-    })
+            "type":
+            "order_status_updated",
+
+            "order_id":
+            order.id,
+
+            "status":
+            order.status,
+
+            "delivery_status":
+            order.delivery_status
+        }
+    )
 
     return {
 
@@ -447,17 +476,22 @@ async def assign_driver(
 
     db.commit()
 
-    await manager.broadcast({
+    await manager.send_order_update(
 
-        "type":
-        "driver_assigned",
-
-        "order_id":
         order.id,
 
-        "driver_id":
-        driver.id
-    })
+        {
+
+            "type":
+            "driver_assigned",
+
+            "order_id":
+            order.id,
+
+            "driver_id":
+            driver.id
+        }
+    )
 
     return {
 
@@ -474,7 +508,7 @@ async def assign_driver(
 # ─────────────────────────────────────────────
 
 @router.put("/orders/{order_id}/auto-assign")
-async def auto_assign_driver(
+async def auto_assign_driver_route(
 
     order_id: int,
 
@@ -537,17 +571,22 @@ async def auto_assign_driver(
 
     db.commit()
 
-    await manager.broadcast({
+    await manager.send_order_update(
 
-        "type":
-        "driver_auto_assigned",
-
-        "order_id":
         order.id,
 
-        "driver_id":
-        available_driver.id
-    })
+        {
+
+            "type":
+            "driver_auto_assigned",
+
+            "order_id":
+            order.id,
+
+            "driver_id":
+            available_driver.id
+        }
+    )
 
     return {
 

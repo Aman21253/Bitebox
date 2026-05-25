@@ -187,53 +187,93 @@ function Checkout() {
         },
 
         handler: async (
-          paymentResponse
+          response
         ) => {
-
+        
           try {
-
-            // VERIFY PAYMENT
-
-            await API.post(
-              "/payments/verify",
-              paymentResponse
+          
+            console.log(
+              "RAZORPAY RESPONSE:",
+              response
             );
-
+          
+            // VALIDATE RESPONSE
+          
+            if (
+              !response.razorpay_order_id ||
+              !response.razorpay_payment_id ||
+              !response.razorpay_signature
+            ) {
+            
+              alert(
+                "Invalid payment response"
+              );
+            
+              return;
+            }
+          
+            // VERIFY PAYMENT
+          
+            const verifyResponse =
+              await API.post(
+                "/payments/verify",
+                {
+                
+                  razorpay_order_id:
+                    response.razorpay_order_id,
+                
+                  razorpay_payment_id:
+                    response.razorpay_payment_id,
+                
+                  razorpay_signature:
+                    response.razorpay_signature
+                
+                }
+              );
+            
+            console.log(
+              verifyResponse.data
+            );
+          
             // CREATE ORDER
-
+          
             const orderResponse =
               await API.post(
                 "/orders/create",
                 {
+                
                   delivery_address:
                     address,
-
+                
                   coupon_code:
                     couponApplied
                       ? couponCode
                       : null,
-
+                
                   discount_amount:
                     discountAmount,
-
+                
                   original_amount:
-                    originalTotal,
+                    originalTotal
+                
                 }
               );
-
-            // SUCCESS
-
+            
             navigate(
-
               `/order-success/${orderResponse.data.order_id}`
-
             );
-
+          
           } catch (error) {
-
-            console.log(error);
-
+          
+            console.log(
+              "VERIFY ERROR:",
+              error.response?.data
+            );
+          
             alert(
+            
+              error.response?.data?.detail ||
+            
               "Payment verification failed"
             );
           }

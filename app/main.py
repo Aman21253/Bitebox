@@ -105,6 +105,10 @@ from app.models.coupon_usage_model import CouponUsage
 from app.routes.coupon_routes import (
     router as coupon_router
 )
+from app.models.notification_model import Notification
+from app.routes.notification_routes import (
+    router as notification_router
+)
 
 # FASTAPI APP
 
@@ -158,6 +162,7 @@ app.include_router(
     admin_restaurant_router
 )
 app.include_router(coupon_router)
+app.include_router(notification_router)
 
 # HOME
 

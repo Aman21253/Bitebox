@@ -11,7 +11,9 @@ from app.websockets.connection_manager import (
 router = APIRouter()
 
 
+# ─────────────────────────────────────────────
 # LIVE ORDER TRACKING SOCKET
+# ─────────────────────────────────────────────
 
 @router.websocket(
     "/ws/order-tracking/{order_id}"
@@ -39,16 +41,18 @@ async def websocket_tracking(
 
             data = await websocket.receive_json()
 
-            # SEND LIVE LOCATION TO ALL
-            # USERS TRACKING THIS ORDER
+            # DRIVER LIVE LOCATION
 
             await manager.send_location_update(
 
                 order_id,
 
                 {
-                    "type": "location_update",
-                    "data": data
+                    "type":
+                    "location_update",
+
+                    "data":
+                    data
                 }
             )
 

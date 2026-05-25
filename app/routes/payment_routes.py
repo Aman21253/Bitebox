@@ -86,11 +86,7 @@ def create_payment_order(
 # VERIFY PAYMENT
 
 @router.post("/verify")
-def verify_payment(
-
-    body: dict
-
-):
+def verify_payment(body: dict):
 
     razorpay_order_id = body.get(
         "razorpay_order_id"
@@ -104,6 +100,19 @@ def verify_payment(
         "razorpay_signature"
     )
 
+    # VALIDATION
+
+    if (
+        not razorpay_order_id or
+        not razorpay_payment_id or
+        not razorpay_signature
+    ):
+
+        raise HTTPException(
+            status_code=400,
+            detail="Missing payment credentials"
+        )
+
     generated_signature = hmac.new(
 
         os.getenv(
@@ -115,6 +124,16 @@ def verify_payment(
         hashlib.sha256
 
     ).hexdigest()
+
+    print(
+        "GENERATED:",
+        generated_signature
+    )
+
+    print(
+        "RECEIVED:",
+        razorpay_signature
+    )
 
     if generated_signature != razorpay_signature:
 
