@@ -8,15 +8,25 @@ import {
   MapPin,
   Clock3,
   CircleDollarSign,
-  CheckCircle2,
+  Navigation,
 } from "lucide-react";
 
 import API from "../../api/axios";
 
+import {
+  createTrackingSocket,
+} from "../../socket/socket";
+
 function ActiveDelivery() {
 
-  const [activeOrders, setActiveOrders] =
-    useState([]);
+  const [
+    activeOrders,
+    setActiveOrders
+  ] = useState([]);
+
+  // ─────────────────────────────────────
+  // FETCH ACTIVE ORDERS
+  // ─────────────────────────────────────
 
   useEffect(() => {
 
@@ -43,6 +53,10 @@ function ActiveDelivery() {
     }
   };
 
+  // ─────────────────────────────────────
+  // UPDATE DELIVERY STATUS
+  // ─────────────────────────────────────
+
   const updateStatus = async (
     orderId,
     status
@@ -51,10 +65,13 @@ function ActiveDelivery() {
     try {
 
       await API.put(
+
         `/drivers/delivery-status/${orderId}`,
+
         {
           delivery_status: status,
         }
+
       );
 
       fetchActiveOrders();
@@ -63,6 +80,100 @@ function ActiveDelivery() {
 
       console.log(error);
     }
+  };
+
+  // ─────────────────────────────────────
+  // START LIVE GPS STREAM
+  // ─────────────────────────────────────
+
+  const startLiveTracking = (
+    orderId
+  ) => {
+
+    if (
+      !navigator.geolocation
+    ) {
+
+      alert(
+        "Geolocation not supported"
+      );
+
+      return;
+    }
+
+    const socket =
+      createTrackingSocket(
+        orderId
+      );
+
+    socket.onopen = () => {
+
+      console.log(
+        "✅ Driver tracking socket connected"
+      );
+
+      navigator.geolocation.watchPosition(
+
+        (position) => {
+
+          const payload = {
+
+            latitude:
+              position.coords.latitude,
+
+            longitude:
+              position.coords.longitude,
+
+            delivery_status:
+              "on_the_way",
+
+            timestamp:
+              new Date().toISOString(),
+          };
+
+          console.log(
+            "📍 Sending GPS:",
+            payload
+          );
+
+          socket.send(
+            JSON.stringify(payload)
+          );
+        },
+
+        (error) => {
+
+          console.log(
+            "GPS ERROR",
+            error
+          );
+        },
+
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 5000,
+        }
+
+      );
+    };
+
+    socket.onerror = (
+      error
+    ) => {
+
+      console.log(
+        "SOCKET ERROR",
+        error
+      );
+    };
+
+    socket.onclose = () => {
+
+      console.log(
+        "❌ Driver socket disconnected"
+      );
+    };
   };
 
   return (
@@ -144,7 +255,7 @@ function ActiveDelivery() {
           )
         }
 
-        {/* ORDERS */}
+        {/* ACTIVE ORDERS */}
 
         <div className="
           grid
@@ -154,7 +265,8 @@ function ActiveDelivery() {
         ">
 
           {
-            activeOrders.map((order) => (
+            activeOrders.map(
+              (order) => (
 
               <div
                 key={order.id}
@@ -318,7 +430,7 @@ function ActiveDelivery() {
 
                   </div>
 
-                  {/* TIME */}
+                  {/* ETA */}
 
                   <div className="
                     flex
@@ -399,12 +511,19 @@ function ActiveDelivery() {
                   </button>
 
                   <button
-                    onClick={() =>
+
+                    onClick={() => {
+
                       updateStatus(
                         order.id,
                         "on_the_way"
-                      )
-                    }
+                      );
+
+                      startLiveTracking(
+                        order.id
+                      );
+                    }}
+
                     className="
                       flex-1
                       min-w-[160px]
@@ -414,9 +533,17 @@ function ActiveDelivery() {
                       hover:bg-orange-400
                       transition
                       font-bold
+                      flex
+                      items-center
+                      justify-center
+                      gap-2
                     "
                   >
-                    On The Way
+
+                    <Navigation size={18} />
+
+                    Start Live Tracking
+
                   </button>
 
                   <button

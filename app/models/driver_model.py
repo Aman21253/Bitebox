@@ -78,4 +78,9 @@ class Driver(Base):
         default=0
     )
 
+    last_active_at = Column(
+        String(100),
+        nullable=True
+    )
+
     user = relationship("User")

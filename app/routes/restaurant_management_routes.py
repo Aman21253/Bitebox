@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 
-@router.post("/create")
+@router.post("/register")
 def create_restaurant(
     restaurant: RestaurantCreate,
     current_user=Depends(

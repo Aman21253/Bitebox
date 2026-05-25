@@ -64,7 +64,8 @@ def create_menu_category(
         db
     )
 
-    if restaurant.status != "approved":
+    # FIXED
+    if restaurant.approval_status != "approved":
         raise HTTPException(
             status_code=403,
             detail="Restaurant not approved"
@@ -207,7 +208,8 @@ def create_menu_item(
         db
     )
 
-    if restaurant.status != "approved":
+    # FIXED
+    if restaurant.approval_status != "approved":
         raise HTTPException(
             status_code=403,
             detail="Restaurant not approved"
@@ -254,9 +256,11 @@ def create_menu_item(
             menu_item_id=item.id,
             image_url=image
         )
+
         db.add(menu_image)
 
     db.commit()
+
     return {
         "message": "Menu item created successfully",
         "item_id": item.id

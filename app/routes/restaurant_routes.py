@@ -9,6 +9,12 @@ from sqlalchemy import func
 
 from datetime import datetime
 
+from datetime import datetime
+
+from app.services.dispatch_service import (
+    auto_assign_driver
+)
+
 from app.middleware.role_middleware import (
     require_role
 )
@@ -282,9 +288,39 @@ async def update_order_status(
 
     elif body.status == "ready_for_pickup":
 
-        order.ready_for_pickup_at = datetime.utcnow()
+        order.ready_for_pickup_at = (
+            datetime.utcnow()
+        )
+        order.delivery_status = (
+            "waiting_for_driver"
+        )
+        order.driver_request_sent_at = (
+            datetime.utcnow()
+        )
+        order.declined_driver_ids = []
+        db.commit()
+        db.refresh(order)
 
-        order.delivery_status = "waiting_for_driver"
+        # AUTO ASSIGN NEAREST DRIVER
+
+        assigned_driver = auto_assign_driver(
+            db,
+            order
+        )
+        if assigned_driver:
+
+            await manager.broadcast({
+
+                "type":
+                "driver_auto_assigned",
+
+                "order_id":
+                order.id,
+
+                "driver_id":
+                assigned_driver.id
+
+            })
 
     elif body.status == "completed":
 

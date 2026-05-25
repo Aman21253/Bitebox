@@ -4,6 +4,11 @@ from fastapi import HTTPException
 
 from sqlalchemy.orm import Session
 
+from datetime import datetime
+from datetime import timedelta
+
+from random import randint
+
 from app.database.db import get_db
 
 from app.middleware.role_middleware import require_role
@@ -17,7 +22,8 @@ from app.schemas.driver_schema import (
     DriverLocationUpdate,
     DriverStatusUpdate,
     DriverAvailabilityRequest,
-    DeliveryStatusUpdate
+    DeliveryStatusUpdate,
+    DeliveryOTPVerifyRequest
 )
 
 router = APIRouter(
@@ -224,7 +230,8 @@ def get_active_delivery(
         Order.delivery_status.in_([
             "driver_assigned",
             "picked_up",
-            "on_the_way"
+            "on_the_way",
+            "otp_verification_pending"
         ])
 
     ).first()
@@ -363,26 +370,130 @@ def update_delivery_status(
             detail="Order not found"
         )
 
-    order.delivery_status = body.delivery_status
-
-    # FINAL DELIVERY
+    # DELIVERY OTP FLOW
 
     if body.delivery_status == "delivered":
 
-        order.status = "delivered"
+        otp = str(
+            randint(1000, 9999)
+        )
 
-        order.payment_status = "completed"
+        order.delivery_otp = otp
 
-        driver.is_available = True
+        order.delivery_otp_expiry = (
+            datetime.utcnow()
+            + timedelta(minutes=10)
+        )
 
-        driver.total_deliveries += 1
+        order.delivery_status = (
+            "otp_verification_pending"
+        )
 
-        driver.total_earnings += 80
+        db.commit()
+
+        return {
+            "message":
+            "Delivery OTP generated",
+            "otp": otp
+        }
+
+    order.delivery_status = body.delivery_status
 
     db.commit()
 
     return {
-        "message": f"Order marked as {body.delivery_status}"
+        "message":
+        f"Order marked as {body.delivery_status}"
+    }
+
+
+# VERIFY DELIVERY OTP
+
+@router.put(
+    "/verify-delivery-otp/{order_id}"
+)
+def verify_delivery_otp(
+
+    order_id: int,
+
+    body: DeliveryOTPVerifyRequest,
+
+    current_user=Depends(
+        require_role(["driver"])
+    ),
+
+    db: Session = Depends(get_db)
+):
+
+    driver = db.query(Driver).filter(
+        Driver.user_id == current_user.id
+    ).first()
+
+    if not driver:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Driver not found"
+        )
+
+    order = db.query(Order).filter(
+
+        Order.id == order_id,
+
+        Order.driver_id == driver.id
+
+    ).first()
+
+    if not order:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Order not found"
+        )
+
+    if order.delivery_otp != body.otp:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid OTP"
+        )
+
+    if (
+        datetime.utcnow()
+        >
+        order.delivery_otp_expiry
+    ):
+
+        raise HTTPException(
+            status_code=400,
+            detail="OTP expired"
+        )
+
+    order.delivery_otp_verified = True
+
+    order.delivery_status = (
+        "delivered"
+    )
+
+    order.status = "completed"
+
+    order.payment_status = "completed"
+
+    order.delivered_at = (
+        datetime.utcnow()
+    )
+
+    driver.is_available = True
+
+    driver.total_deliveries += 1
+
+    driver.total_earnings += 80
+
+    db.commit()
+
+    return {
+        "message":
+        "Order delivered successfully"
     }
 
 

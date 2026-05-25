@@ -5,7 +5,9 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     DateTime,
-    Text
+    Text,
+    JSON,
+    Boolean
 )
 
 from sqlalchemy.orm import relationship
@@ -64,7 +66,7 @@ class Order(Base):
 
     refund_status = Column(
         String(50),
-        nullable=True
+        default="not_requested"
     )
 
     cancellation_reason = Column(
@@ -101,21 +103,16 @@ class Order(Base):
         default=0
     )
 
-    refund_status = Column(
-        String(50),
-        default="not_requested"
-    )
-
     coupon_code = Column(
         String(50),
         nullable=True
     )
-    
+
     discount_amount = Column(
         Float,
         default=0
     )
-    
+
     original_amount = Column(
         Float,
         default=0
@@ -132,6 +129,39 @@ class Order(Base):
     estimated_delivery_time = Column(
         Integer,
         default=30
+    )
+
+    # ─────────────────────────────────────
+    # DRIVER REQUEST FLOW
+    # ─────────────────────────────────────
+
+    driver_request_sent_at = Column(
+        DateTime,
+        nullable=True
+    )
+
+    declined_driver_ids = Column(
+        JSON,
+        default=[]
+    )
+
+    # ─────────────────────────────────────
+    # DELIVERY OTP
+    # ─────────────────────────────────────
+
+    delivery_otp = Column(
+        String(10),
+        nullable=True
+    )
+
+    delivery_otp_expiry = Column(
+        DateTime,
+        nullable=True
+    )
+
+    delivery_otp_verified = Column(
+        Boolean,
+        default=False
     )
 
     # ─────────────────────────────────────

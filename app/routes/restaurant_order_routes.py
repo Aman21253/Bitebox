@@ -13,6 +13,10 @@ from app.middleware.role_middleware import (
 from app.models.restaurant_model import Restaurant
 from app.models.order_model import Order
 from app.models.driver_model import Driver
+from datetime import datetime
+from app.services.dispatch_service import (
+    auto_assign_driver
+)
 
 from app.websockets.connection_manager import (
     manager

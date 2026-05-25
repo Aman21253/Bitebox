@@ -1,27 +1,10 @@
-const socket = new WebSocket(
-    "ws://127.0.0.1:8000/ws/orders"
-);
+export const createTrackingSocket = (
+    orderId
+) => {
 
-socket.onopen = () => {
+    return new WebSocket(
 
-    console.log(
-        "✅ SOCKET CONNECTED"
+        `ws://127.0.0.1:8000/ws/order-tracking/${orderId}`
+
     );
 };
-
-socket.onerror = (error) => {
-
-    console.log(
-        "❌ SOCKET ERROR",
-        error
-    );
-};
-
-socket.onclose = () => {
-
-    console.log(
-        "⚠️ SOCKET CLOSED"
-    );
-};
-
-export default socket;

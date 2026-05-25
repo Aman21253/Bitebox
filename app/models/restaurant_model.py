@@ -82,6 +82,16 @@ class Restaurant(Base):
         nullable=False
     )
 
+    latitude = Column(
+        Float,
+        nullable=True
+    )
+
+    longitude = Column(
+        Float,
+        nullable=True
+    )
+
     # DELIVERY
 
     delivery_radius = Column(
