@@ -33,6 +33,23 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
+import AdminMasterCuisines from "./pages/admin/AdminMasterCuisines";
+import AdminMasterCountries from "./pages/admin/AdminMasterCountries";
+import AdminMasterTaxes from "./pages/admin/AdminMasterTaxes";
+import AdminMasterCurrencies from "./pages/admin/AdminMasterCurrencies";
+import AdminMasterLanguages from "./pages/admin/AdminMasterLanguages";
+
+import AdminConfigPlatformFees from "./pages/admin/AdminConfigPlatformFees";
+import AdminConfigCommissions from "./pages/admin/AdminConfigCommissions";
+import AdminConfigAuditLogs from "./pages/admin/AdminConfigAuditLogs";
+import AdminConfigApp from "./pages/admin/AdminConfigApp";
+import AdminConfigSMTP from "./pages/admin/AdminConfigSMTP";
+import AdminConfigSMS from "./pages/admin/AdminConfigSMS";
+import AdminConfigPayment from "./pages/admin/AdminConfigPayment";
+import AdminConfigMaintenance from "./pages/admin/AdminConfigMaintenance";
+import AdminConfigNotificationTemplates from "./pages/admin/AdminConfigNotificationTemplates";
+import AdminConfigHomeLayout from "./pages/admin/AdminConfigHomeLayout";
+
 function App() {
 
   return (
@@ -192,6 +209,7 @@ function App() {
         />
 
         {/* ADMIN */}
+
         <Route
           path="/admin/dashboard"
           element={
@@ -203,15 +221,11 @@ function App() {
               <AdminDashboard />
             </RoleProtectedRoute>
           }
-        
         />
 
         <Route
-
           path="/admin/restaurants"
-        
           element={
-          
             <RoleProtectedRoute
               allowedRoles={[
                 "admin",
@@ -219,9 +233,9 @@ function App() {
             >
               <AdminRestaurants />
             </RoleProtectedRoute>
-
           }
         />
+
         <Route
           path="/admin/users"
           element={
@@ -234,7 +248,7 @@ function App() {
             </RoleProtectedRoute>
           }
         />
-        
+
         <Route
           path="/admin/orders"
           element={
@@ -247,7 +261,7 @@ function App() {
             </RoleProtectedRoute>
           }
         />
-        
+
         <Route
           path="/admin/analytics"
           element={
@@ -257,6 +271,145 @@ function App() {
               ]}
             >
               <AdminAnalytics />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* MASTER DATA */}
+
+        <Route
+          path="/admin/master/cuisines"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminMasterCuisines />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/master/countries"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminMasterCountries />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/master/taxes"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminMasterTaxes />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/master/currencies"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminMasterCurrencies />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/master/languages"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminMasterLanguages />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* PLATFORM CONFIG */}
+
+        <Route
+          path="/admin/config/platform-fees"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminConfigPlatformFees />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/config/commissions"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminConfigCommissions />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/config/audit-logs"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminConfigAuditLogs />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/config/app"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminConfigApp />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/config/smtp"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminConfigSMTP />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/config/sms"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminConfigSMS />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/config/payment"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminConfigPayment />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/config/maintenance"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminConfigMaintenance />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/config/notification-templates"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminConfigNotificationTemplates />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/config/home-layout"
+          element={
+            <RoleProtectedRoute allowedRoles={["admin"]}>
+              <AdminConfigHomeLayout />
             </RoleProtectedRoute>
           }
         />

@@ -132,6 +132,8 @@ from app.models.restaurant_transaction_model import (
 from app.routes.restaurant_payout_routes import (
     router as restaurant_payout_router
 )
+from app.routes.admin_master_routes import router as admin_master_router
+from app.routes.admin_config_routes import router as admin_config_router
 
 # FASTAPI APP
 
@@ -190,6 +192,9 @@ app.include_router(
     restaurant_payout_router
 )
 
+
+app.include_router(admin_master_router)
+app.include_router(admin_config_router)
 # HOME
 
 @app.get("/")
