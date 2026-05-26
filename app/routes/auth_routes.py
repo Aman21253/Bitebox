@@ -396,16 +396,63 @@ def change_password(
 # Current Logged-In User
 # ─────────────────────────────────────────────────────────────
 
+# ─────────────────────────────────────────────────────────────
+# Current Logged-In User
+# ─────────────────────────────────────────────────────────────
+
 @router.get("/me")
 def get_me(
-    current_user: User = Depends(get_current_user)
+
+    current_user: User = Depends(
+        get_current_user
+    ),
+
+    db: Session = Depends(get_db)
+
 ):
 
+    restaurant = None
+
+    # ─────────────────────────────────────
+    # LOAD RESTAURANT INFO
+    # ─────────────────────────────────────
+
+    if current_user.role.value == "restaurant":
+
+        from app.models.restaurant_model import (
+            Restaurant
+        )
+
+        restaurant = db.query(
+            Restaurant
+        ).filter(
+            Restaurant.owner_id ==
+            current_user.id
+        ).first()
+
     return {
-        "id": current_user.id,
-        "name": current_user.name,
-        "email": current_user.email,
-        "phone": current_user.phone,
-        "role": current_user.role.value,
-        "status": current_user.status
+
+        "id":
+        current_user.id,
+        "name":
+        current_user.name,
+        "email":
+        current_user.email,
+        "phone":
+        current_user.phone,
+        "role":
+        current_user.role.value,
+        "status":
+        current_user.status,
+        "restaurant":
+
+        {
+            "id":
+            restaurant.id,
+            "approval_status":
+            restaurant.approval_status,
+            "rejection_reason":
+            restaurant.rejection_reason
+
+        } if restaurant else None
     }

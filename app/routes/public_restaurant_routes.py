@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+
 from sqlalchemy.orm import Session
 
 from app.database.db import get_db
@@ -25,7 +28,11 @@ def get_restaurants(
 ):
 
     restaurants = db.query(Restaurant).filter(
-        Restaurant.status.in_(["approved", "pending"])
+
+        Restaurant.approval_status == "approved",
+
+        Restaurant.status == "active"
+
     ).all()
 
     formatted_restaurants = []
@@ -44,10 +51,19 @@ def get_restaurants(
             "image_url": restaurant.image_url,
             "cuisine": restaurant.cuisine,
             "city": restaurant.city,
-            "rating": 4.5,
-            "delivery_time": "25-30 min",
-            "delivery_fee": 40,
-            "total_items": total_items
+
+            "rating": restaurant.average_rating,
+
+            "delivery_time":
+            f"{restaurant.estimated_delivery_time} min",
+
+            "delivery_fee":
+            restaurant.delivery_fee,
+
+            "total_items": total_items,
+
+            "approval_status":
+            restaurant.approval_status
         })
 
     return formatted_restaurants
@@ -65,7 +81,9 @@ def get_restaurant_details(
 
     restaurant = db.query(Restaurant).filter(
         Restaurant.id == restaurant_id,
-        Restaurant.status == "approved"
+        Restaurant.approval_status == "approved",
+        Restaurant.status == "active"
+
     ).first()
 
     if not restaurant:
@@ -90,18 +108,31 @@ def get_restaurant_details(
         "name": restaurant.name,
         "description": restaurant.description,
         "image_url": restaurant.image_url,
+        "banner_image": restaurant.banner_image,
         "address": restaurant.address,
         "city": restaurant.city,
         "state": restaurant.state,
         "pincode": restaurant.pincode,
         "phone": restaurant.phone,
         "cuisine": restaurant.cuisine,
-        "delivery_radius": restaurant.delivery_radius,
-        "rating": 4.5,
-        "delivery_time": "25-30 min",
-        "delivery_fee": 40,
-        "total_categories": total_categories,
-        "total_items": total_items
+
+        "delivery_radius":
+        restaurant.delivery_radius,
+
+        "rating":
+        restaurant.average_rating,
+
+        "delivery_time":
+        f"{restaurant.estimated_delivery_time} min",
+
+        "delivery_fee":
+        restaurant.delivery_fee,
+
+        "total_categories":
+        total_categories,
+
+        "total_items":
+        total_items
     }
 
 
@@ -113,11 +144,14 @@ def get_restaurant_details(
 def get_restaurant_menu(
     restaurant_id: int,
     db: Session = Depends(get_db)
+
 ):
 
     restaurant = db.query(Restaurant).filter(
         Restaurant.id == restaurant_id,
-        Restaurant.status == "approved"
+        Restaurant.approval_status == "approved",
+        Restaurant.status == "active"
+
     ).first()
 
     if not restaurant:
@@ -180,9 +214,15 @@ def get_restaurant_menu(
                 "image_url": item.image_url,
                 "is_veg": item.is_veg,
                 "base_price": item.base_price,
-                "preparation_time": item.preparation_time,
-                "variants": formatted_variants,
-                "addons": formatted_addons
+
+                "preparation_time":
+                item.preparation_time,
+
+                "variants":
+                formatted_variants,
+
+                "addons":
+                formatted_addons
             })
 
         formatted_categories.append({

@@ -6,6 +6,8 @@ from fastapi import (
 
 from sqlalchemy.orm import Session
 
+from pydantic import BaseModel
+
 from app.database.db import get_db
 
 from app.middleware.role_middleware import (
@@ -16,10 +18,18 @@ from app.models.restaurant_model import (
     Restaurant
 )
 
+from app.services.notification_service import (
+    create_notification
+)
+
 router = APIRouter(
     prefix="/api/admin/restaurants",
     tags=["Admin Restaurant"]
 )
+
+
+class RejectRestaurantBody(BaseModel):
+    reason: str
 
 
 # GET ALL RESTAURANTS
@@ -68,7 +78,7 @@ def get_pending_restaurants(
 # APPROVE RESTAURANT
 
 @router.put("/{restaurant_id}/approve")
-def approve_restaurant(
+async def approve_restaurant(
 
     restaurant_id: int,
 
@@ -103,6 +113,19 @@ def approve_restaurant(
 
     db.commit()
 
+    await create_notification(
+
+        db=db,
+
+        user_id=restaurant.owner_id,
+
+        title="Restaurant Approved",
+
+        message=f"{restaurant.name} has been approved and is now live.",
+
+        notification_type="restaurant_approval"
+    )
+
     return {
         "message":
         "Restaurant approved successfully"
@@ -112,11 +135,11 @@ def approve_restaurant(
 # REJECT RESTAURANT
 
 @router.put("/{restaurant_id}/reject")
-def reject_restaurant(
+async def reject_restaurant(
 
     restaurant_id: int,
 
-    reason: str,
+    body: RejectRestaurantBody,
 
     current_user=Depends(
         require_role(["admin"])
@@ -143,9 +166,22 @@ def reject_restaurant(
 
     restaurant.approval_status = "rejected"
 
-    restaurant.rejection_reason = reason
+    restaurant.rejection_reason = body.reason
 
     db.commit()
+
+    await create_notification(
+
+        db=db,
+
+        user_id=restaurant.owner_id,
+
+        title="Restaurant Rejected",
+
+        message=body.reason,
+
+        notification_type="restaurant_rejection"
+    )
 
     return {
         "message":
@@ -156,7 +192,7 @@ def reject_restaurant(
 # SUSPEND RESTAURANT
 
 @router.put("/{restaurant_id}/suspend")
-def suspend_restaurant(
+async def suspend_restaurant(
 
     restaurant_id: int,
 
@@ -186,6 +222,15 @@ def suspend_restaurant(
     restaurant.approval_status = "suspended"
 
     db.commit()
+
+    await create_notification(
+
+        db=db,
+        user_id=restaurant.owner_id,
+        title="Restaurant Suspended",
+        message="Your restaurant has been suspended by admin.",
+        notification_type="restaurant_suspension"
+    )
 
     return {
         "message":

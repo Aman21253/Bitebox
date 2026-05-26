@@ -8,9 +8,13 @@ from sqlalchemy.orm import Session
 
 from app.database.db import get_db
 
-from app.middleware.role_middleware import require_role
+from app.middleware.role_middleware import (
+    require_role
+)
 
-from app.models.restaurant_model import Restaurant
+from app.models.restaurant_model import (
+    Restaurant
+)
 
 router = APIRouter(
     prefix="/api/restaurant/settings",
@@ -18,18 +22,21 @@ router = APIRouter(
 )
 
 
-# GET SETTINGS
-
 @router.get("/")
 def get_restaurant_settings(
+
     current_user=Depends(
         require_role(["restaurant"])
     ),
+
     db: Session = Depends(get_db)
 ):
 
-    restaurant = db.query(Restaurant).filter(
-        Restaurant.owner_id == current_user.id
+    restaurant = db.query(
+        Restaurant
+    ).filter(
+        Restaurant.owner_id ==
+        current_user.id
     ).first()
 
     if not restaurant:
@@ -42,19 +49,23 @@ def get_restaurant_settings(
     return restaurant
 
 
-# UPDATE SETTINGS
-
 @router.put("/")
 def update_restaurant_settings(
+
     body: dict,
+
     current_user=Depends(
         require_role(["restaurant"])
     ),
+
     db: Session = Depends(get_db)
 ):
 
-    restaurant = db.query(Restaurant).filter(
-        Restaurant.owner_id == current_user.id
+    restaurant = db.query(
+        Restaurant
+    ).filter(
+        Restaurant.owner_id ==
+        current_user.id
     ).first()
 
     if not restaurant:
@@ -64,73 +75,64 @@ def update_restaurant_settings(
             detail="Restaurant not found"
         )
 
-    restaurant.name = body.get(
-        "name",
-        restaurant.name
+    restaurant.gst_number = body.get(
+        "gst_number",
+        restaurant.gst_number
     )
 
-    restaurant.description = body.get(
-        "description",
-        restaurant.description
+    restaurant.fssai_number = body.get(
+        "fssai_number",
+        restaurant.fssai_number
     )
 
-    restaurant.cuisine = body.get(
-        "cuisine",
-        restaurant.cuisine
+    restaurant.gst_certificate_url = body.get(
+        "gst_certificate_url",
+        restaurant.gst_certificate_url
     )
 
-    restaurant.phone = body.get(
-        "phone",
-        restaurant.phone
+    restaurant.fssai_certificate_url = body.get(
+        "fssai_certificate_url",
+        restaurant.fssai_certificate_url
     )
 
-    restaurant.image_url = body.get(
-        "image_url",
-        restaurant.image_url
+    restaurant.pan_card_url = body.get(
+        "pan_card_url",
+        restaurant.pan_card_url
     )
 
-    restaurant.banner_image = body.get(
-        "banner_image",
-        restaurant.banner_image
+    restaurant.cancelled_cheque_url = body.get(
+        "cancelled_cheque_url",
+        restaurant.cancelled_cheque_url
     )
 
-    restaurant.delivery_radius = body.get(
-        "delivery_radius",
-        restaurant.delivery_radius
+    restaurant.bank_account_holder = body.get(
+        "bank_account_holder",
+        restaurant.bank_account_holder
     )
 
-    restaurant.delivery_fee = body.get(
-        "delivery_fee",
-        restaurant.delivery_fee
+    restaurant.bank_name = body.get(
+        "bank_name",
+        restaurant.bank_name
     )
 
-    restaurant.minimum_order = body.get(
-        "minimum_order",
-        restaurant.minimum_order
+    restaurant.bank_account_number = body.get(
+        "bank_account_number",
+        restaurant.bank_account_number
     )
 
-    restaurant.estimated_delivery_time = body.get(
-        "estimated_delivery_time",
-        restaurant.estimated_delivery_time
+    restaurant.bank_ifsc = body.get(
+        "bank_ifsc",
+        restaurant.bank_ifsc
     )
 
-    restaurant.is_open = body.get(
-        "is_open",
-        restaurant.is_open
-    )
-
-    restaurant.opening_time = body.get(
-        "opening_time",
-        restaurant.opening_time
-    )
-
-    restaurant.closing_time = body.get(
-        "closing_time",
-        restaurant.closing_time
+    restaurant.upi_id = body.get(
+        "upi_id",
+        restaurant.upi_id
     )
 
     db.commit()
 
     return {
-        "message": "Restaurant settings updated successfully"
+        "message":
+        "Restaurant settings updated successfully"
     }

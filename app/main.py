@@ -122,6 +122,16 @@ from app.routes.address_routes import (
 from app.routes.review_routes import (
     router as review_router
 )
+from app.models.restaurant_payout_model import (
+    RestaurantPayout
+)
+
+from app.models.restaurant_transaction_model import (
+    RestaurantTransaction
+)
+from app.routes.restaurant_payout_routes import (
+    router as restaurant_payout_router
+)
 
 # FASTAPI APP
 
@@ -176,6 +186,9 @@ app.include_router(coupon_router)
 app.include_router(notification_router)
 app.include_router(address_router)
 app.include_router(review_router)
+app.include_router(
+    restaurant_payout_router
+)
 
 # HOME
 

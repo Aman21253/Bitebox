@@ -190,3 +190,80 @@ class Restaurant(Base):
         "User",
         foreign_keys=[owner_id]
     )
+
+    # ─────────────────────────────────────
+    # GST / FSSAI
+    # ─────────────────────────────────────
+    
+    gst_number = Column(
+        String(50),
+        nullable=True
+    )
+    
+    fssai_number = Column(
+        String(50),
+        nullable=True
+    )
+    
+    gst_certificate_url = Column(
+        String(500),
+        nullable=True
+    )
+    
+    fssai_certificate_url = Column(
+        String(500),
+        nullable=True
+    )
+    
+    pan_card_url = Column(
+        String(500),
+        nullable=True
+    )
+    
+    cancelled_cheque_url = Column(
+        String(500),
+        nullable=True
+    )
+    
+    # ─────────────────────────────────────
+    # BANK DETAILS
+    # ─────────────────────────────────────
+    
+    bank_account_holder = Column(
+        String(150),
+        nullable=True
+    )
+    
+    bank_name = Column(
+        String(150),
+        nullable=True
+    )
+    
+    bank_account_number = Column(
+        String(100),
+        nullable=True
+    )
+    
+    bank_ifsc = Column(
+        String(50),
+        nullable=True
+    )
+    
+    upi_id = Column(
+        String(100),
+        nullable=True
+    )
+    
+    # ─────────────────────────────────────
+    # PAYOUTS
+    # ─────────────────────────────────────
+    
+    available_balance = Column(
+        Float,
+        default=0
+    )
+    
+    lifetime_earnings = Column(
+        Float,
+        default=0
+    )

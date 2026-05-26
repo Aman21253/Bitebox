@@ -16,7 +16,7 @@ from app.models.restaurant_model import (
 )
 
 
-def require_approved_restaurant():
+def get_restaurant_record():
 
     def checker(
 
@@ -44,6 +44,21 @@ def require_approved_restaurant():
                 detail="Restaurant not found"
             )
 
+        return restaurant
+
+    return checker
+
+
+def require_approved_restaurant():
+
+    def checker(
+
+        restaurant=Depends(
+            get_restaurant_record()
+        )
+
+    ):
+
         if (
             restaurant.approval_status
             != "approved"
@@ -51,11 +66,16 @@ def require_approved_restaurant():
 
             raise HTTPException(
                 status_code=403,
-                detail=f"""
-Restaurant is currently {
-restaurant.approval_status
-}
-"""
+                detail={
+                    "message":
+                    "Restaurant not approved",
+
+                    "approval_status":
+                    restaurant.approval_status,
+
+                    "rejection_reason":
+                    restaurant.rejection_reason
+                }
             )
 
         return restaurant
