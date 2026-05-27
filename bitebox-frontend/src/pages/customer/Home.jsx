@@ -30,6 +30,9 @@ function Home() {
   const [search, setSearch] =
     useState("");
 
+  const [selectedCategory, setSelectedCategory] =
+    useState("All");
+
   useEffect(() => {
 
     fetchRestaurants();
@@ -65,38 +68,51 @@ function Home() {
   };
 
   const categories = [
+    
     {
-      emoji: "🍕",
-      name: "Pizza",
+      emoji: "✨",
+      name: "All",
     },
-    {
-      emoji: "🍔",
-      name: "Burgers",
-    },
-    {
-      emoji: "🍗",
-      name: "Chicken",
-    },
-    {
-      emoji: "🥗",
-      name: "Healthy",
-    },
-    {
-      emoji: "🍜",
-      name: "Chinese",
-    },
-    {
-      emoji: "🍰",
-      name: "Desserts",
-    },
+  
+    ...[
+      ...new Set(
+        restaurants.map(
+          (restaurant) =>
+            restaurant.cuisine
+        )
+      ),
+    ].map((cuisine) => ({
+    
+      emoji: "🍽",
+    
+      name: cuisine,
+    })),
   ];
 
   const filteredRestaurants =
-    restaurants.filter((restaurant) =>
-      restaurant.name
-        .toLowerCase()
-        .includes(search.toLowerCase())
-    );
+    restaurants.filter((restaurant) => {
+
+      const matchesSearch =
+        restaurant.name
+          ?.toLowerCase()
+          .includes(
+            search.toLowerCase()
+          );
+
+      const matchesCategory =
+        selectedCategory === "All"
+          ? true
+          : restaurant.cuisine
+              ?.toLowerCase()
+              .includes(
+                selectedCategory.toLowerCase()
+              );
+
+      return (
+        matchesSearch &&
+        matchesCategory
+      );
+    });
 
   return (
 
@@ -393,8 +409,6 @@ function Home() {
             xl:py-20
           ">
 
-            {/* GLOW */}
-
             <div className="
               absolute
               top-[-120px]
@@ -417,8 +431,6 @@ function Home() {
               blur-[140px]
             " />
 
-            {/* CONTENT */}
-
             <div className="
               relative
               z-10
@@ -429,8 +441,6 @@ function Home() {
               xl:gap-20
               items-center
             ">
-
-              {/* LEFT */}
 
               <div className="
                 max-w-[900px]
@@ -484,230 +494,6 @@ function Home() {
 
                 </h1>
 
-                <p className="
-                  mt-8
-                  text-gray-400
-                  text-lg
-                  md:text-[22px]
-                  leading-relaxed
-                  max-w-[620px]
-                ">
-                  Discover top-rated restaurants,
-                  lightning-fast delivery, and a
-                  luxury ordering experience crafted
-                  for modern food lovers.
-                </p>
-
-                <div className="
-                  flex
-                  flex-wrap
-                  gap-4
-                  mt-9
-                ">
-
-                  <button className="
-                    bg-orange-500
-                    hover:bg-orange-400
-                    hover:scale-105
-                    transition-all
-                    duration-300
-                    px-7
-                    py-4
-                    rounded-2xl
-                    font-bold
-                    text-base
-                    shadow-[0_15px_40px_rgba(249,115,22,0.35)]
-                  ">
-                    Explore Restaurants
-                  </button>
-
-                  <button className="
-                    border
-                    border-white/10
-                    bg-white/5
-                    hover:bg-white/10
-                    transition-all
-                    duration-300
-                    px-7
-                    py-4
-                    rounded-2xl
-                    font-semibold
-                    text-gray-300
-                  ">
-                    View Offers
-                  </button>
-
-                </div>
-
-              </div>
-
-              {/* RIGHT */}
-
-              <div className="
-                flex
-                justify-center
-                xl:justify-end
-              ">
-
-                <div className="
-                  w-full
-                  max-w-[430px]
-                  bg-white/[0.05]
-                  backdrop-blur-2xl
-                  border
-                  border-white/10
-                  rounded-[34px]
-                  p-7
-                  xl:p-8
-                  shadow-[0_20px_70px_rgba(0,0,0,0.35)]
-                ">
-
-                  <div className="
-                    flex
-                    items-center
-                    justify-between
-                    mb-7
-                  ">
-
-                    <div className="
-                      w-14
-                      h-14
-                      rounded-3xl
-                      bg-orange-500/15
-                      flex
-                      items-center
-                      justify-center
-                    ">
-
-                      <MapPin
-                        size={24}
-                        className="
-                          text-orange-400
-                        "
-                      />
-
-                    </div>
-
-                    <div className="
-                      px-3
-                      py-1.5
-                      rounded-full
-                      bg-green-500/10
-                      border
-                      border-green-500/20
-                      text-green-400
-                      text-xs
-                      font-semibold
-                    ">
-                      Live
-                    </div>
-
-                  </div>
-
-                  <h2 className="
-                    text-3xl
-                    md:text-4xl
-                    font-black
-                    leading-tight
-                  ">
-                    Delivering to your area
-                  </h2>
-
-                  <p className="
-                    mt-4
-                    text-gray-400
-                    leading-relaxed
-                    text-sm
-                    md:text-base
-                  ">
-                    Fast, secure and premium
-                    delivery service at your
-                    fingertips.
-                  </p>
-
-                  <div className="
-                    grid
-                    grid-cols-2
-                    gap-4
-                    mt-8
-                  ">
-
-                    <div className="
-                      bg-white/[0.04]
-                      border
-                      border-white/10
-                      rounded-3xl
-                      p-5
-                    ">
-
-                      <p className="
-                        text-3xl
-                        font-black
-                      ">
-                        4.9
-                      </p>
-
-                      <p className="
-                        mt-2
-                        text-gray-400
-                        text-xs
-                      ">
-                        User Rating
-                      </p>
-
-                    </div>
-
-                    <div className="
-                      bg-white/[0.04]
-                      border
-                      border-white/10
-                      rounded-3xl
-                      p-5
-                    ">
-
-                      <p className="
-                        text-3xl
-                        font-black
-                      ">
-                        30m
-                      </p>
-
-                      <p className="
-                        mt-2
-                        text-gray-400
-                        text-xs
-                      ">
-                        Avg Delivery
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                  <div className="
-                    mt-7
-                    flex
-                    items-center
-                    gap-2
-                    text-orange-300
-                    text-xs
-                    font-semibold
-                    border-t
-                    border-white/10
-                    pt-5
-                  ">
-
-                    <Star
-                      size={14}
-                      fill="currentColor"
-                    />
-
-                    Rated #1 Food Delivery Experience
-
-                  </div>
-
-                </div>
-
               </div>
 
             </div>
@@ -740,16 +526,12 @@ function Home() {
               Categories
             </h2>
 
-            <button className="
-              hidden
-              md:flex
-              items-center
-              gap-2
+            <div className="
               text-orange-400
               font-semibold
             ">
-              View All
-            </button>
+              {selectedCategory}
+            </div>
 
           </div>
 
@@ -757,7 +539,7 @@ function Home() {
             grid
             grid-cols-2
             md:grid-cols-3
-            lg:grid-cols-6
+            lg:grid-cols-7
             gap-5
           ">
 
@@ -767,13 +549,15 @@ function Home() {
 
                 <div
                   key={index}
-                  className="
+                  onClick={() =>
+                    setSelectedCategory(
+                      category.name
+                    )
+                  }
+                  className={`
                     group
                     relative
                     overflow-hidden
-                    bg-white/[0.04]
-                    border
-                    border-white/10
                     rounded-[28px]
                     h-[120px]
                     flex
@@ -781,12 +565,34 @@ function Home() {
                     items-center
                     justify-center
                     cursor-pointer
-                    hover:border-orange-500/40
-                    hover:-translate-y-2
-                    hover:shadow-[0_20px_60px_rgba(249,115,22,0.18)]
                     transition-all
                     duration-500
-                  "
+                    hover:-translate-y-2
+                    hover:shadow-[0_20px_60px_rgba(249,115,22,0.18)]
+
+                    ${
+                      selectedCategory ===
+                      category.name
+
+                        ?
+
+                        `
+                        bg-orange-500/10
+                        border
+                        border-orange-500/40
+                        shadow-[0_15px_40px_rgba(249,115,22,0.18)]
+                        `
+
+                        :
+
+                        `
+                        bg-white/[0.04]
+                        border
+                        border-white/10
+                        hover:border-orange-500/40
+                        `
+                    }
+                  `}
                 >
 
                   <span className="
@@ -795,12 +601,24 @@ function Home() {
                     {category.emoji}
                   </span>
 
-                  <p className="
+                  <p className={`
                     mt-3
                     font-semibold
                     text-base
-                    text-gray-300
-                  ">
+
+                    ${
+                      selectedCategory ===
+                      category.name
+
+                        ?
+
+                        "text-orange-300"
+
+                        :
+
+                        "text-gray-300"
+                    }
+                  `}>
                     {category.name}
                   </p>
 
@@ -835,7 +653,17 @@ function Home() {
                 font-black
                 tracking-tight
               ">
-                Top Restaurants
+                {
+                  selectedCategory === "All"
+
+                    ?
+
+                    "Top Restaurants"
+
+                    :
+
+                    `${selectedCategory} Restaurants`
+                }
               </h2>
 
               <p className="
@@ -843,7 +671,7 @@ function Home() {
                 mt-2
                 text-base
               ">
-                Handpicked restaurants for you
+                {filteredRestaurants.length} restaurants found
               </p>
 
             </div>
@@ -864,155 +692,195 @@ function Home() {
 
           </div>
 
-          <div className="
-            grid
-            grid-cols-1
-            sm:grid-cols-2
-            lg:grid-cols-3
-            2xl:grid-cols-4
-            gap-8
-          ">
+          {
+            filteredRestaurants.length === 0 ? (
 
-            {
-              filteredRestaurants.map(
-                (restaurant) => (
+              <div className="
+                rounded-[32px]
+                border
+                border-white/10
+                bg-white/[0.03]
+                py-24
+                text-center
+              ">
 
-                <div
-                  key={restaurant.id}
-                  onClick={() =>
-                    navigate(
-                      `/restaurants/${restaurant.id}`
-                    )
-                  }
-                  className="
-                    group
-                    bg-white/[0.03]
-                    backdrop-blur-xl
-                    rounded-[30px]
-                    overflow-hidden
-                    border
-                    border-white/10
-                    hover:border-orange-500/40
-                    transition-all
-                    duration-500
-                    hover:-translate-y-3
-                    hover:shadow-[0_20px_90px_rgba(249,115,22,0.18)]
-                    cursor-pointer
-                  "
-                >
-
-                  <div className="
-                    relative
-                    overflow-hidden
-                  ">
-
-                    <img
-                      src={
-                        restaurant.image_url ||
-                        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200&auto=format&fit=crop"
-                      }
-                      alt={restaurant.name}
-                      className="
-                        w-full
-                        h-[240px]
-                        object-cover
-                        transition-transform
-                        duration-700
-                        group-hover:scale-110
-                      "
-                    />
-
-                    <div className="
-                      absolute
-                      inset-0
-                      bg-gradient-to-t
-                      from-black/70
-                      via-transparent
-                      to-transparent
-                    " />
-
-                    <div className="
-                      absolute
-                      top-4
-                      right-4
-                      bg-orange-500/20
-                      backdrop-blur-xl
-                      border
-                      border-orange-400/20
-                      text-orange-300
-                      px-3
-                      py-1.5
-                      rounded-2xl
-                      text-sm
-                      font-semibold
-                      flex
-                      items-center
-                      gap-1
-                    ">
-
-                      <Star
-                        size={14}
-                        fill="currentColor"
-                      />
-
-                      {restaurant.rating}
-
-                    </div>
-
-                  </div>
-
-                  <div className="p-6">
-
-                    <h3 className="
-                      text-2xl
-                      font-bold
-                      text-white
-                      leading-tight
-                      break-words
-                    ">
-                      {restaurant.name}
-                    </h3>
-
-                    <p className="
-                      text-gray-400
-                      mt-2
-                      break-words
-                    ">
-                      {restaurant.cuisine}
-                    </p>
-
-                    <div className="
-                      flex
-                      items-center
-                      justify-between
-                      gap-4
-                      mt-6
-                    ">
-
-                      <p className="
-                        text-gray-300
-                        font-medium
-                      ">
-                        ⏱ {restaurant.delivery_time}
-                      </p>
-
-                      <p className="
-                        text-orange-400
-                        font-bold
-                        shrink-0
-                      ">
-                        ₹{restaurant.delivery_fee}
-                      </p>
-
-                    </div>
-
-                  </div>
-
+                <div className="
+                  text-7xl
+                  mb-6
+                ">
+                  🍽
                 </div>
-              ))
-            }
 
-          </div>
+                <h3 className="
+                  text-3xl
+                  font-black
+                  mb-3
+                ">
+                  No Restaurants Found
+                </h3>
+
+                <p className="
+                  text-gray-400
+                  text-lg
+                ">
+                  Try another category or search term
+                </p>
+
+              </div>
+
+            ) : (
+
+              <div className="
+                grid
+                grid-cols-1
+                sm:grid-cols-2
+                lg:grid-cols-3
+                2xl:grid-cols-4
+                gap-8
+              ">
+
+                {
+                  filteredRestaurants.map(
+                    (restaurant) => (
+
+                    <div
+                      key={restaurant.id}
+                      onClick={() =>
+                        navigate(
+                          `/restaurants/${restaurant.id}`
+                        )
+                      }
+                      className="
+                        group
+                        bg-white/[0.03]
+                        backdrop-blur-xl
+                        rounded-[30px]
+                        overflow-hidden
+                        border
+                        border-white/10
+                        hover:border-orange-500/40
+                        transition-all
+                        duration-500
+                        hover:-translate-y-3
+                        hover:shadow-[0_20px_90px_rgba(249,115,22,0.18)]
+                        cursor-pointer
+                      "
+                    >
+
+                      <div className="
+                        relative
+                        overflow-hidden
+                      ">
+
+                        <img
+                          src={
+                            restaurant.image_url ||
+                            "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200&auto=format&fit=crop"
+                          }
+                          alt={restaurant.name}
+                          className="
+                            w-full
+                            h-[240px]
+                            object-cover
+                            transition-transform
+                            duration-700
+                            group-hover:scale-110
+                          "
+                        />
+
+                        <div className="
+                          absolute
+                          inset-0
+                          bg-gradient-to-t
+                          from-black/70
+                          via-transparent
+                          to-transparent
+                        " />
+
+                        <div className="
+                          absolute
+                          top-4
+                          right-4
+                          bg-orange-500/20
+                          backdrop-blur-xl
+                          border
+                          border-orange-400/20
+                          text-orange-300
+                          px-3
+                          py-1.5
+                          rounded-2xl
+                          text-sm
+                          font-semibold
+                          flex
+                          items-center
+                          gap-1
+                        ">
+
+                          <Star
+                            size={14}
+                            fill="currentColor"
+                          />
+
+                          {restaurant.rating || "4.5"}
+
+                        </div>
+
+                      </div>
+
+                      <div className="p-6">
+
+                        <h3 className="
+                          text-2xl
+                          font-bold
+                          text-white
+                          leading-tight
+                          break-words
+                        ">
+                          {restaurant.name}
+                        </h3>
+
+                        <p className="
+                          text-gray-400
+                          mt-2
+                          break-words
+                        ">
+                          {restaurant.cuisine}
+                        </p>
+
+                        <div className="
+                          flex
+                          items-center
+                          justify-between
+                          gap-4
+                          mt-6
+                        ">
+
+                          <p className="
+                            text-gray-300
+                            font-medium
+                          ">
+                            ⏱ {restaurant.delivery_time}
+                          </p>
+
+                          <p className="
+                            text-orange-400
+                            font-bold
+                            shrink-0
+                          ">
+                            ₹{restaurant.delivery_fee}
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+                  ))
+                }
+
+              </div>
+            )
+          }
 
         </div>
 
