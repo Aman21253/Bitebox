@@ -77,17 +77,18 @@ def get_available_driver_pool(
 
         return []
 
-    restaurant_lat = (
-        restaurant.latitude
-        if restaurant.latitude
-        else 28.6139
-    )
+    if (
+        restaurant.latitude is None
+        or
+        restaurant.longitude is None
+    ):
 
-    restaurant_lng = (
-        restaurant.longitude
-        if restaurant.longitude
-        else 77.2090
-    )
+        print("Restaurant coordinates missing")
+
+        return []
+
+    restaurant_lat = restaurant.latitude
+    restaurant_lng = restaurant.longitude
 
     available_drivers = db.query(
         Driver
@@ -104,29 +105,19 @@ def get_available_driver_pool(
     for driver in available_drivers:
 
         if (
-
             driver.current_latitude is None
-
             or
-
             driver.current_longitude is None
-
         ):
-
             continue
 
         # SKIP DECLINED DRIVERS
 
         if (
-
             order.declined_driver_ids
-
             and
-
             driver.id in order.declined_driver_ids
-
         ):
-
             continue
 
         distance = calculate_distance(
@@ -136,16 +127,42 @@ def get_available_driver_pool(
 
             driver.current_latitude,
             driver.current_longitude
-
         )
 
-        filtered_drivers.append({
+        print("────────────")
+        print("Driver:", driver.id)
+        print(
+            "Driver Location:",
+            driver.current_latitude,
+            driver.current_longitude
+        )
 
-            "driver": driver,
+        print(
+            "Restaurant:",
+            restaurant.name
+        )
 
-            "distance": distance
+        print(
+            "Restaurant Location:",
+            restaurant.latitude,
+            restaurant.longitude
+        )
 
-        })
+        print("Distance:", distance)
+
+        MAX_DRIVER_RADIUS_KM = 15
+
+        # ONLY DRIVERS INSIDE 15KM
+
+        if distance <= MAX_DRIVER_RADIUS_KM:
+
+            filtered_drivers.append({
+
+                "driver": driver,
+
+                "distance": distance
+
+            })
 
     filtered_drivers.sort(
         key=lambda x: x["distance"]
@@ -238,8 +255,6 @@ def reassign_next_driver(
 
 ):
 
-    # ADD DRIVER TO DECLINED LIST
-
     declined_list = (
         order.declined_driver_ids or []
     )
@@ -253,8 +268,6 @@ def reassign_next_driver(
     order.declined_driver_ids = (
         declined_list
     )
-
-    # REMOVE CURRENT DRIVER
 
     order.driver_id = None
 
@@ -276,13 +289,9 @@ def reassign_next_driver(
 
     db.commit()
 
-    # MAX ATTEMPTS SAFETY
-
     if order.dispatch_attempts >= 5:
 
         return None
-
-    # ASSIGN NEXT DRIVER
 
     next_driver = auto_assign_driver(
         db,

@@ -155,9 +155,19 @@ def get_available_orders(
 
     if not driver:
         raise HTTPException(status_code=404, detail="Driver not found")
+    if not driver.is_online:
+        return []
+
+    if not driver.is_available:
+        return []
 
     # If driver has no GPS yet, return empty
-    if driver.current_latitude is None or driver.current_longitude is None:
+    if (
+        driver.current_latitude is None
+        or driver.current_longitude is None
+        or driver.current_latitude == 0
+        or driver.current_longitude == 0
+    ):
         return []
 
     orders = db.query(Order).filter(
@@ -178,6 +188,7 @@ def get_available_orders(
             driver.current_longitude,
             restaurant.latitude,
             restaurant.longitude
+            
         )
 
         if distance <= DELIVERY_RADIUS_KM:

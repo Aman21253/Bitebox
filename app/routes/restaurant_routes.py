@@ -15,7 +15,7 @@ from app.database.db import get_db
 from app.middleware.role_middleware import (
     require_role
 )
-
+from app.utils.geocode import get_coordinates
 from app.middleware.restaurant_approval_middleware import (
     require_approved_restaurant
 )

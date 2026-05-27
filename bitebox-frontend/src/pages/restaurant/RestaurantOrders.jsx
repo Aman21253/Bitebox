@@ -44,7 +44,6 @@ function RestaurantOrders() {
       ) {
 
         setOrders(response.data);
-
       } else {
 
         setOrders([]);

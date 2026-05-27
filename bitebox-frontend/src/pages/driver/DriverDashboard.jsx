@@ -27,7 +27,13 @@ function DriverDashboard() {
   const activeOrderRef = useRef(null);
 
   useEffect(() => { activeOrderRef.current = activeOrder; }, [activeOrder]);
-  useEffect(() => { fetchDashboard(); }, []);
+  useEffect(() => {
+    fetchDashboard();
+    const interval = setInterval(() => {
+      fetchDashboard();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // ─────────────────────────────────────
   // SOCKET
@@ -59,6 +65,7 @@ function DriverDashboard() {
         const { latitude, longitude } = position.coords;
         try {
           await API.put("/drivers/location", { latitude, longitude });
+          fetchDashboard();
           const socket = socketRef.current;
           const order = activeOrderRef.current;
           if (socket && order && socket.readyState === WebSocket.OPEN) {
@@ -88,7 +95,7 @@ function DriverDashboard() {
       ]);
 
       setAvailableOrders(ordersRes.data);
-      setActiveOrder(activeRes.data?.active_order === null ? null : activeRes.data);
+      setActiveOrder(activeRes.data || null);
 
       if (driverRes.data?.registered === false) {
         setDriver(null);
