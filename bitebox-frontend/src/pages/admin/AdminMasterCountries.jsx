@@ -1,182 +1,893 @@
-import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Check, X, ChevronRight } from "lucide-react";
+import { useEffect,useMemo,useState } from "react";
+import { Plus,Pencil,Trash2,Check,X,ChevronRight,Globe2,MapPinned,Search,RefreshCw,AlertCircle } from "lucide-react";
 import API from "../../api/axios";
 import AdminSidebar from "../../components/admin/AdminSidebar";
+import AdminSkeleton from "../../components/admin/AdminSkeleton";
+import AdminEmptyState from "../../components/admin/AdminEmptyState";
+
+const COUNTRY_FORM={
+  name:"",
+  code:"",
+  is_active:true
+};
+
+const STATE_FORM={
+  name:"",
+  country_id:"",
+  is_active:true
+};
 
 function AdminMasterCountries() {
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("countries"); // "countries" | "states"
-  const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: "", code: "", is_active: true });
-  const [stateForm, setStateForm] = useState({ name: "", country_id: "", is_active: true });
+  const [countries,setCountries]=useState([]);
+  const [states,setStates]=useState([]);
+  const [selectedCountry,setSelectedCountry]=useState(null);
 
-  useEffect(() => { fetchCountries(); }, []);
+  const [loading,setLoading]=useState(true);
+  const [stateLoading,setStateLoading]=useState(false);
 
-  const fetchCountries = async () => {
-    try {
-      const res = await API.get("/admin/master/countries");
-      setCountries(res.data);
-    } catch (e) { console.log(e); }
-    finally { setLoading(false); }
-  };
+  const [tab,setTab]=useState("countries");
 
-  const fetchStates = async (countryId) => {
-    try {
-      const res = await API.get(`/admin/master/states?country_id=${countryId}`);
-      setStates(res.data);
-    } catch (e) { console.log(e); }
-  };
+  const [showForm,setShowForm]=useState(false);
+  const [editing,setEditing]=useState(null);
 
-  const selectCountry = (c) => {
-    setSelectedCountry(c);
-    setTab("states");
-    fetchStates(c.id);
-    setStateForm({ name: "", country_id: c.id, is_active: true });
-  };
+  const [countrySearch,setCountrySearch]=useState("");
+  const [stateSearch,setStateSearch]=useState("");
 
-  const saveCountry = async () => {
-    try {
-      if (editing) await API.put(`/admin/master/countries/${editing.id}`, form);
-      else await API.post("/admin/master/countries", form);
-      setForm({ name: "", code: "", is_active: true });
-      setEditing(null); setShowForm(false);
-      fetchCountries();
-    } catch (e) { console.log(e); }
-  };
+  const [error,setError]=useState("");
 
-  const saveState = async () => {
-    try {
-      if (editing) await API.put(`/admin/master/states/${editing.id}`, stateForm);
-      else await API.post("/admin/master/states", stateForm);
-      setStateForm({ name: "", country_id: selectedCountry.id, is_active: true });
-      setEditing(null); setShowForm(false);
-      fetchStates(selectedCountry.id);
-    } catch (e) { console.log(e); }
-  };
+  const [form,setForm]=useState(COUNTRY_FORM);
 
-  const removeCountry = async (id) => {
-    if (!confirm("Delete country?")) return;
-    await API.delete(`/admin/master/countries/${id}`);
+  const [stateForm,setStateForm]=useState(STATE_FORM);
+
+  useEffect(()=>{
     fetchCountries();
+  },[]);
+
+  const fetchCountries=async()=>{
+    setLoading(true);
+    setError("");
+
+    try{
+      const res=await API.get("/admin/master/countries");
+      setCountries(res.data);
+    }catch(e){
+      console.log(e);
+      setError("Failed to load countries");
+    }finally{
+      setLoading(false);
+    }
   };
 
-  const removeState = async (id) => {
-    if (!confirm("Delete state?")) return;
-    await API.delete(`/admin/master/states/${id}`);
-    fetchStates(selectedCountry.id);
+  const fetchStates=async(countryId)=>{
+    setStateLoading(true);
+
+    try{
+      const res=await API.get(`/admin/master/states?country_id=${countryId}`);
+      setStates(res.data);
+    }catch(e){
+      console.log(e);
+    }finally{
+      setStateLoading(false);
+    }
   };
 
-  return (
+  const selectCountry=(country)=>{
+    setSelectedCountry(country);
+
+    setTab("states");
+
+    fetchStates(country.id);
+
+    setStateForm({
+      name:"",
+      country_id:country.id,
+      is_active:true
+    });
+
+    setShowForm(false);
+  };
+
+  const saveCountry=async()=>{
+    if(!form.name || !form.code){
+      return alert("Please fill all fields");
+    }
+
+    try{
+      if(editing){
+        await API.put(`/admin/master/countries/${editing.id}`,form);
+      }else{
+        await API.post("/admin/master/countries",form);
+      }
+
+      setForm(COUNTRY_FORM);
+
+      setEditing(null);
+
+      setShowForm(false);
+
+      fetchCountries();
+    }catch(e){
+      console.log(e);
+    }
+  };
+
+  const saveState=async()=>{
+    if(!stateForm.name){
+      return alert("State name required");
+    }
+
+    try{
+      if(editing){
+        await API.put(`/admin/master/states/${editing.id}`,stateForm);
+      }else{
+        await API.post("/admin/master/states",stateForm);
+      }
+
+      setStateForm({
+        name:"",
+        country_id:selectedCountry.id,
+        is_active:true
+      });
+
+      setEditing(null);
+
+      setShowForm(false);
+
+      fetchStates(selectedCountry.id);
+    }catch(e){
+      console.log(e);
+    }
+  };
+
+  const removeCountry=async(id)=>{
+    if(!confirm("Delete country?")) return;
+
+    try{
+      await API.delete(`/admin/master/countries/${id}`);
+      fetchCountries();
+    }catch(e){
+      console.log(e);
+    }
+  };
+
+  const removeState=async(id)=>{
+    if(!confirm("Delete state?")) return;
+
+    try{
+      await API.delete(`/admin/master/states/${id}`);
+      fetchStates(selectedCountry.id);
+    }catch(e){
+      console.log(e);
+    }
+  };
+
+  const filteredCountries=useMemo(()=>{
+    return countries.filter((c)=>
+      c.name?.toLowerCase().includes(countrySearch.toLowerCase()) ||
+      c.code?.toLowerCase().includes(countrySearch.toLowerCase())
+    );
+  },[countries,countrySearch]);
+
+  const filteredStates=useMemo(()=>{
+    return states.filter((s)=>
+      s.name?.toLowerCase().includes(stateSearch.toLowerCase())
+    );
+  },[states,stateSearch]);
+
+  const activeCountries=countries.filter(
+    (c)=>c.is_active
+  ).length;
+
+  const activeStates=states.filter(
+    (s)=>s.is_active
+  ).length;
+
+  return(
     <div className="min-h-screen bg-[#070b14] text-white flex">
       <AdminSidebar />
-      <div className="flex-1 p-10">
-        <div className="max-w-[1100px] mx-auto">
-          <div className="flex items-end justify-between mb-10">
+
+      <div className="flex-1 p-4 md:p-6 xl:p-10 overflow-x-hidden">
+        <div className="max-w-[1500px] mx-auto">
+
+          {/* HEADER */}
+
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 mb-10">
+
             <div>
-              <p className="text-orange-400 uppercase tracking-[3px] text-xs font-bold mb-3">Master Data</p>
-              <h1 className="text-5xl font-black">
-                {tab === "states" && selectedCountry ? (
-                  <span className="flex items-center gap-3">
-                    <button onClick={() => setTab("countries")} className="text-gray-500 hover:text-white transition-all">Countries</button>
-                    <ChevronRight size={32} className="text-gray-600" />
-                    {selectedCountry.name}
-                  </span>
-                ) : "Country / State Master"}
-              </h1>
+
+              <p className="text-orange-400 uppercase tracking-[3px] text-xs font-bold mb-3">
+                Master Data
+              </p>
+
+              {
+                tab==="states" && selectedCountry ? (
+                  <div className="flex items-center gap-3 flex-wrap">
+
+                    <button
+                      onClick={()=>{
+                        setTab("countries");
+                        setSelectedCountry(null);
+                        setShowForm(false);
+                      }}
+                      className="text-gray-500 hover:text-white transition-all text-3xl md:text-4xl font-black"
+                    >
+                      Countries
+                    </button>
+
+                    <ChevronRight
+                      size={28}
+                      className="text-gray-600"
+                    />
+
+                    <h1 className="text-3xl md:text-5xl font-black">
+                      {selectedCountry.name}
+                    </h1>
+
+                  </div>
+                ) : (
+                  <h1 className="text-4xl md:text-5xl font-black">
+                    Country / State Master
+                  </h1>
+                )
+              }
+
+              <p className="text-gray-500 mt-3">
+                Manage countries and states across the platform.
+              </p>
+
             </div>
-            <button
-              onClick={() => { setShowForm(true); setEditing(null); }}
-              className="flex items-center gap-2 px-6 py-3 bg-orange-500 rounded-2xl font-bold hover:bg-orange-600 transition-all"
-            >
-              <Plus size={18} /> Add {tab === "states" ? "State" : "Country"}
-            </button>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+
+              <button
+                onClick={()=>{
+                  if(tab==="countries"){
+                    fetchCountries();
+                  }else{
+                    fetchStates(selectedCountry.id);
+                  }
+                }}
+                className="h-14 px-6 rounded-2xl bg-white/[0.05] border border-white/10 hover:bg-white/[0.08] transition-all font-bold flex items-center justify-center gap-3"
+              >
+                <RefreshCw size={18} />
+                Refresh
+              </button>
+
+              <button
+                onClick={()=>{
+                  setShowForm(true);
+                  setEditing(null);
+
+                  if(tab==="countries"){
+                    setForm(COUNTRY_FORM);
+                  }else{
+                    setStateForm({
+                      name:"",
+                      country_id:selectedCountry.id,
+                      is_active:true
+                    });
+                  }
+                }}
+                className="h-14 px-7 rounded-2xl bg-orange-500 hover:bg-orange-400 transition-all font-bold flex items-center justify-center gap-3 shadow-lg shadow-orange-500/20"
+              >
+                <Plus size={18} />
+                Add {tab==="states" ? "State" : "Country"}
+              </button>
+
+            </div>
+
           </div>
 
-          {/* FORM */}
-          {showForm && tab === "countries" && (
-            <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-7 mb-8">
-              <div className="flex gap-4 items-center">
-                <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Country name" className="flex-1 h-12 rounded-2xl bg-white/5 border border-white/10 px-5 outline-none focus:border-orange-500 transition-all" />
-                <input value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} placeholder="Code (e.g. IN)" className="w-32 h-12 rounded-2xl bg-white/5 border border-white/10 px-5 outline-none focus:border-orange-500 transition-all" />
-                <button onClick={saveCountry} className="h-12 px-6 bg-orange-500 rounded-2xl font-bold hover:bg-orange-600 transition-all"><Check size={16} /></button>
-                <button onClick={() => setShowForm(false)} className="h-12 px-6 bg-white/5 rounded-2xl font-bold"><X size={16} /></button>
-              </div>
-            </div>
-          )}
+          {/* STATS */}
 
-          {showForm && tab === "states" && (
-            <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-7 mb-8">
-              <div className="flex gap-4 items-center">
-                <input value={stateForm.name} onChange={e => setStateForm({ ...stateForm, name: e.target.value })} placeholder="State name" className="flex-1 h-12 rounded-2xl bg-white/5 border border-white/10 px-5 outline-none focus:border-orange-500 transition-all" />
-                <button onClick={saveState} className="h-12 px-6 bg-orange-500 rounded-2xl font-bold hover:bg-orange-600 transition-all"><Check size={16} /></button>
-                <button onClick={() => setShowForm(false)} className="h-12 px-6 bg-white/5 rounded-2xl font-bold"><X size={16} /></button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+
+            <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6">
+
+              <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-5">
+                <Globe2 className="text-orange-400" size={26} />
               </div>
+
+              <p className="text-gray-500 mb-2">
+                Total Countries
+              </p>
+
+              <h2 className="text-4xl font-black">
+                {countries.length}
+              </h2>
+
+              <p className="text-sm text-green-400 mt-2">
+                {activeCountries} active
+              </p>
+
             </div>
-          )}
+
+            <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6">
+
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-5">
+                <MapPinned className="text-blue-400" size={26} />
+              </div>
+
+              <p className="text-gray-500 mb-2">
+                Total States
+              </p>
+
+              <h2 className="text-4xl font-black">
+                {states.length}
+              </h2>
+
+              <p className="text-sm text-green-400 mt-2">
+                {activeStates} active
+              </p>
+
+            </div>
+
+          </div>
+
+          {/* SEARCH */}
+
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5 mb-8">
+
+            <div className="relative w-full lg:max-w-md">
+
+              <Search
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
+              />
+
+              <input
+                value={
+                  tab==="countries"
+                  ? countrySearch
+                  : stateSearch
+                }
+                onChange={(e)=>{
+                  if(tab==="countries"){
+                    setCountrySearch(e.target.value);
+                  }else{
+                    setStateSearch(e.target.value);
+                  }
+                }}
+                placeholder={`Search ${tab}...`}
+                className="w-full h-14 rounded-2xl bg-white/[0.05] border border-white/10 pl-12 pr-5 outline-none focus:border-orange-500 transition-all"
+              />
+
+            </div>
+
+          </div>
+
+          {/* ERROR */}
+
+          {
+            error && (
+              <div className="mb-8 rounded-[28px] border border-red-500/20 bg-red-500/10 p-6">
+
+                <div className="flex items-start gap-4">
+
+                  <AlertCircle
+                    size={22}
+                    className="text-red-400 shrink-0 mt-1"
+                  />
+
+                  <div>
+
+                    <h2 className="text-red-400 font-black text-xl mb-2">
+                      Failed To Load
+                    </h2>
+
+                    <p className="text-red-200/80 text-sm mb-5">
+                      {error}
+                    </p>
+
+                    <button
+                      onClick={fetchCountries}
+                      className="h-11 px-5 rounded-xl bg-red-500 hover:bg-red-400 transition-all font-bold"
+                    >
+                      Retry
+                    </button>
+
+                  </div>
+
+                </div>
+
+              </div>
+            )
+          }
+
+          {/* COUNTRY FORM */}
+
+          {
+            showForm && tab==="countries" && (
+              <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-7 mb-8">
+
+                <div className="flex items-center justify-between mb-7">
+
+                  <div>
+
+                    <h2 className="text-3xl font-black">
+                      {
+                        editing
+                        ? "Edit Country"
+                        : "Create Country"
+                      }
+                    </h2>
+
+                    <p className="text-gray-500 mt-2">
+                      Add countries available on the platform.
+                    </p>
+
+                  </div>
+
+                  <button
+                    onClick={()=>{
+                      setShowForm(false);
+                      setEditing(null);
+                    }}
+                    className="w-11 h-11 rounded-xl bg-white/[0.05] border border-white/10 hover:bg-red-500/20 hover:border-red-500/20 transition-all flex items-center justify-center"
+                  >
+                    <X size={18} />
+                  </button>
+
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-7">
+
+                  <div>
+
+                    <p className="text-sm text-gray-400 mb-3">
+                      Country Name
+                    </p>
+
+                    <input
+                      value={form.name}
+                      onChange={(e)=>setForm({...form,name:e.target.value})}
+                      placeholder="India"
+                      className="w-full h-14 rounded-2xl bg-white/[0.05] border border-white/10 px-5 outline-none focus:border-orange-500 transition-all"
+                    />
+
+                  </div>
+
+                  <div>
+
+                    <p className="text-sm text-gray-400 mb-3">
+                      Country Code
+                    </p>
+
+                    <input
+                      value={form.code}
+                      onChange={(e)=>setForm({...form,code:e.target.value})}
+                      placeholder="IN"
+                      className="w-full h-14 rounded-2xl bg-white/[0.05] border border-white/10 px-5 uppercase outline-none focus:border-orange-500 transition-all"
+                    />
+
+                  </div>
+
+                </div>
+
+                <div className="flex items-center gap-4 mb-7">
+
+                  <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 cursor-pointer">
+
+                    <input
+                      type="checkbox"
+                      checked={form.is_active}
+                      onChange={(e)=>setForm({...form,is_active:e.target.checked})}
+                      className="accent-orange-500"
+                    />
+
+                    <span className="text-sm text-gray-300">
+                      Active
+                    </span>
+
+                  </label>
+
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+
+                  <button
+                    onClick={saveCountry}
+                    className="h-14 px-8 rounded-2xl bg-orange-500 hover:bg-orange-400 transition-all font-bold flex items-center justify-center gap-3"
+                  >
+                    <Check size={18} />
+                    Save Country
+                  </button>
+
+                  <button
+                    onClick={()=>{
+                      setShowForm(false);
+                      setEditing(null);
+                    }}
+                    className="h-14 px-8 rounded-2xl bg-white/[0.05] border border-white/10 hover:bg-white/[0.08] transition-all font-bold flex items-center justify-center gap-3"
+                  >
+                    <X size={18} />
+                    Cancel
+                  </button>
+
+                </div>
+
+              </div>
+            )
+          }
+
+          {/* STATE FORM */}
+
+          {
+            showForm && tab==="states" && (
+              <div className="rounded-[32px] border border-white/10 bg-white/[0.03] p-7 mb-8">
+
+                <div className="flex items-center justify-between mb-7">
+
+                  <div>
+
+                    <h2 className="text-3xl font-black">
+                      {
+                        editing
+                        ? "Edit State"
+                        : "Create State"
+                      }
+                    </h2>
+
+                    <p className="text-gray-500 mt-2">
+                      Add states for {selectedCountry?.name}
+                    </p>
+
+                  </div>
+
+                  <button
+                    onClick={()=>{
+                      setShowForm(false);
+                      setEditing(null);
+                    }}
+                    className="w-11 h-11 rounded-xl bg-white/[0.05] border border-white/10 hover:bg-red-500/20 hover:border-red-500/20 transition-all flex items-center justify-center"
+                  >
+                    <X size={18} />
+                  </button>
+
+                </div>
+
+                <div className="mb-7">
+
+                  <p className="text-sm text-gray-400 mb-3">
+                    State Name
+                  </p>
+
+                  <input
+                    value={stateForm.name}
+                    onChange={(e)=>setStateForm({...stateForm,name:e.target.value})}
+                    placeholder="Haryana"
+                    className="w-full h-14 rounded-2xl bg-white/[0.05] border border-white/10 px-5 outline-none focus:border-orange-500 transition-all"
+                  />
+
+                </div>
+
+                <div className="flex items-center gap-4 mb-7">
+
+                  <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 cursor-pointer">
+
+                    <input
+                      type="checkbox"
+                      checked={stateForm.is_active}
+                      onChange={(e)=>setStateForm({...stateForm,is_active:e.target.checked})}
+                      className="accent-orange-500"
+                    />
+
+                    <span className="text-sm text-gray-300">
+                      Active
+                    </span>
+
+                  </label>
+
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+
+                  <button
+                    onClick={saveState}
+                    className="h-14 px-8 rounded-2xl bg-orange-500 hover:bg-orange-400 transition-all font-bold flex items-center justify-center gap-3"
+                  >
+                    <Check size={18} />
+                    Save State
+                  </button>
+
+                  <button
+                    onClick={()=>{
+                      setShowForm(false);
+                      setEditing(null);
+                    }}
+                    className="h-14 px-8 rounded-2xl bg-white/[0.05] border border-white/10 hover:bg-white/[0.08] transition-all font-bold flex items-center justify-center gap-3"
+                  >
+                    <X size={18} />
+                    Cancel
+                  </button>
+
+                </div>
+
+              </div>
+            )
+          }
 
           {/* COUNTRIES TABLE */}
-          {tab === "countries" && !loading && (
-            <div className="rounded-[32px] border border-white/10 bg-white/[0.03] overflow-hidden">
-              <table className="w-full">
-                <thead><tr className="border-b border-white/10">
-                  <th className="px-8 py-5 text-left text-gray-400 font-semibold">Name</th>
-                  <th className="px-8 py-5 text-left text-gray-400 font-semibold">Code</th>
-                  <th className="px-8 py-5 text-left text-gray-400 font-semibold">Status</th>
-                  <th className="px-8 py-5 text-left text-gray-400 font-semibold">Actions</th>
-                </tr></thead>
-                <tbody>
-                  {countries.map((c) => (
-                    <tr key={c.id} className="border-b border-white/5 hover:bg-white/[0.02] cursor-pointer" onClick={() => selectCountry(c)}>
-                      <td className="px-8 py-5 font-bold">{c.name}</td>
-                      <td className="px-8 py-5 text-gray-400">{c.code}</td>
-                      <td className="px-8 py-5">
-                        <span className={`px-3 py-1 rounded-xl text-xs font-bold ${c.is_active ? "bg-green-500/10 text-green-300 border border-green-500/20" : "bg-red-500/10 text-red-300 border border-red-500/20"}`}>{c.is_active ? "Active" : "Inactive"}</span>
-                      </td>
-                      <td className="px-8 py-5" onClick={e => e.stopPropagation()}>
-                        <div className="flex gap-3">
-                          <button onClick={() => { setEditing(c); setForm({ name: c.name, code: c.code, is_active: c.is_active }); setShowForm(true); }} className="p-2 rounded-xl bg-white/5 hover:bg-orange-500/20 hover:text-orange-400 transition-all"><Pencil size={16} /></button>
-                          <button onClick={() => removeCountry(c.id)} className="p-2 rounded-xl bg-white/5 hover:bg-red-500/20 hover:text-red-400 transition-all"><Trash2 size={16} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+
+          {
+            tab==="countries" && (
+              <>
+                {
+                  loading ? (
+                    <div className="space-y-4">
+                      <AdminSkeleton className="h-20 rounded-[24px]" />
+                      <AdminSkeleton className="h-20 rounded-[24px]" />
+                      <AdminSkeleton className="h-20 rounded-[24px]" />
+                    </div>
+                  ) : filteredCountries.length===0 ? (
+                    <AdminEmptyState
+                      icon={Globe2}
+                      title="No Countries Found"
+                      description="Add your first country to get started."
+                    />
+                  ) : (
+                    <div className="overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.03]">
+
+                      <div className="overflow-x-auto">
+
+                        <table className="w-full min-w-[950px]">
+
+                          <thead>
+
+                            <tr className="border-b border-white/10 bg-white/[0.02]">
+
+                              <th className="px-8 py-6 text-left text-gray-400 font-semibold">
+                                Country
+                              </th>
+
+                              <th className="px-8 py-6 text-left text-gray-400 font-semibold">
+                                Code
+                              </th>
+
+                              <th className="px-8 py-6 text-left text-gray-400 font-semibold">
+                                Status
+                              </th>
+
+                              <th className="px-8 py-6 text-left text-gray-400 font-semibold">
+                                Actions
+                              </th>
+
+                            </tr>
+
+                          </thead>
+
+                          <tbody>
+
+                            {
+                              filteredCountries.map((country)=>(
+                                <tr
+                                  key={country.id}
+                                  onClick={()=>selectCountry(country)}
+                                  className="border-b border-white/5 hover:bg-white/[0.03] transition-all cursor-pointer"
+                                >
+
+                                  <td className="px-8 py-6">
+
+                                    <div>
+
+                                      <p className="font-black text-lg">
+                                        {country.name}
+                                      </p>
+
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Click to view states
+                                      </p>
+
+                                    </div>
+
+                                  </td>
+
+                                  <td className="px-8 py-6 text-gray-300 font-semibold">
+                                    {country.code}
+                                  </td>
+
+                                  <td className="px-8 py-6">
+
+                                    <span className={`px-4 py-2 rounded-xl text-xs font-bold ${
+                                      country.is_active
+                                      ? "bg-green-500/10 text-green-300 border border-green-500/20"
+                                      : "bg-red-500/10 text-red-300 border border-red-500/20"
+                                    }`}>
+                                      {
+                                        country.is_active
+                                        ? "Active"
+                                        : "Inactive"
+                                      }
+                                    </span>
+
+                                  </td>
+
+                                  <td
+                                    className="px-8 py-6"
+                                    onClick={(e)=>e.stopPropagation()}
+                                  >
+
+                                    <div className="flex items-center gap-3">
+
+                                      <button
+                                        onClick={()=>{
+                                          setEditing(country);
+
+                                          setForm({
+                                            name:country.name,
+                                            code:country.code,
+                                            is_active:country.is_active
+                                          });
+
+                                          setShowForm(true);
+                                        }}
+                                        className="w-11 h-11 rounded-xl bg-white/[0.05] border border-white/10 hover:bg-orange-500/20 hover:border-orange-500/20 hover:text-orange-400 transition-all flex items-center justify-center"
+                                      >
+                                        <Pencil size={16} />
+                                      </button>
+
+                                      <button
+                                        onClick={()=>removeCountry(country.id)}
+                                        className="w-11 h-11 rounded-xl bg-white/[0.05] border border-white/10 hover:bg-red-500/20 hover:border-red-500/20 hover:text-red-400 transition-all flex items-center justify-center"
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+
+                                    </div>
+
+                                  </td>
+
+                                </tr>
+                              ))
+                            }
+
+                          </tbody>
+
+                        </table>
+
+                      </div>
+
+                    </div>
+                  )
+                }
+              </>
+            )
+          }
 
           {/* STATES TABLE */}
-          {tab === "states" && (
-            <div className="rounded-[32px] border border-white/10 bg-white/[0.03] overflow-hidden">
-              <table className="w-full">
-                <thead><tr className="border-b border-white/10">
-                  <th className="px-8 py-5 text-left text-gray-400 font-semibold">State Name</th>
-                  <th className="px-8 py-5 text-left text-gray-400 font-semibold">Status</th>
-                  <th className="px-8 py-5 text-left text-gray-400 font-semibold">Actions</th>
-                </tr></thead>
-                <tbody>
-                  {states.map((s) => (
-                    <tr key={s.id} className="border-b border-white/5">
-                      <td className="px-8 py-5 font-bold">{s.name}</td>
-                      <td className="px-8 py-5">
-                        <span className={`px-3 py-1 rounded-xl text-xs font-bold ${s.is_active ? "bg-green-500/10 text-green-300 border border-green-500/20" : "bg-red-500/10 text-red-300 border border-red-500/20"}`}>{s.is_active ? "Active" : "Inactive"}</span>
-                      </td>
-                      <td className="px-8 py-5">
-                        <div className="flex gap-3">
-                          <button onClick={() => { setEditing(s); setStateForm({ name: s.name, country_id: selectedCountry.id, is_active: s.is_active }); setShowForm(true); }} className="p-2 rounded-xl bg-white/5 hover:bg-orange-500/20 hover:text-orange-400 transition-all"><Pencil size={16} /></button>
-                          <button onClick={() => removeState(s.id)} className="p-2 rounded-xl bg-white/5 hover:bg-red-500/20 hover:text-red-400 transition-all"><Trash2 size={16} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+
+          {
+            tab==="states" && (
+              <>
+                {
+                  stateLoading ? (
+                    <div className="space-y-4">
+                      <AdminSkeleton className="h-20 rounded-[24px]" />
+                      <AdminSkeleton className="h-20 rounded-[24px]" />
+                    </div>
+                  ) : filteredStates.length===0 ? (
+                    <AdminEmptyState
+                      icon={MapPinned}
+                      title="No States Found"
+                      description={`No states added for ${selectedCountry?.name}.`}
+                    />
+                  ) : (
+                    <div className="overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.03]">
+
+                      <div className="overflow-x-auto">
+
+                        <table className="w-full min-w-[850px]">
+
+                          <thead>
+
+                            <tr className="border-b border-white/10 bg-white/[0.02]">
+
+                              <th className="px-8 py-6 text-left text-gray-400 font-semibold">
+                                State
+                              </th>
+
+                              <th className="px-8 py-6 text-left text-gray-400 font-semibold">
+                                Status
+                              </th>
+
+                              <th className="px-8 py-6 text-left text-gray-400 font-semibold">
+                                Actions
+                              </th>
+
+                            </tr>
+
+                          </thead>
+
+                          <tbody>
+
+                            {
+                              filteredStates.map((state)=>(
+                                <tr
+                                  key={state.id}
+                                  className="border-b border-white/5 hover:bg-white/[0.03] transition-all"
+                                >
+
+                                  <td className="px-8 py-6">
+
+                                    <div>
+
+                                      <p className="font-black text-lg">
+                                        {state.name}
+                                      </p>
+
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        {selectedCountry?.name}
+                                      </p>
+
+                                    </div>
+
+                                  </td>
+
+                                  <td className="px-8 py-6">
+
+                                    <span className={`px-4 py-2 rounded-xl text-xs font-bold ${
+                                      state.is_active
+                                      ? "bg-green-500/10 text-green-300 border border-green-500/20"
+                                      : "bg-red-500/10 text-red-300 border border-red-500/20"
+                                    }`}>
+                                      {
+                                        state.is_active
+                                        ? "Active"
+                                        : "Inactive"
+                                      }
+                                    </span>
+
+                                  </td>
+
+                                  <td className="px-8 py-6">
+
+                                    <div className="flex items-center gap-3">
+
+                                      <button
+                                        onClick={()=>{
+                                          setEditing(state);
+
+                                          setStateForm({
+                                            name:state.name,
+                                            country_id:selectedCountry.id,
+                                            is_active:state.is_active
+                                          });
+
+                                          setShowForm(true);
+                                        }}
+                                        className="w-11 h-11 rounded-xl bg-white/[0.05] border border-white/10 hover:bg-orange-500/20 hover:border-orange-500/20 hover:text-orange-400 transition-all flex items-center justify-center"
+                                      >
+                                        <Pencil size={16} />
+                                      </button>
+
+                                      <button
+                                        onClick={()=>removeState(state.id)}
+                                        className="w-11 h-11 rounded-xl bg-white/[0.05] border border-white/10 hover:bg-red-500/20 hover:border-red-500/20 hover:text-red-400 transition-all flex items-center justify-center"
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+
+                                    </div>
+
+                                  </td>
+
+                                </tr>
+                              ))
+                            }
+
+                          </tbody>
+
+                        </table>
+
+                      </div>
+
+                    </div>
+                  )
+                }
+              </>
+            )
+          }
+
         </div>
       </div>
     </div>

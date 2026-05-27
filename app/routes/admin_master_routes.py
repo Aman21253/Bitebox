@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 router = APIRouter(
-    prefix="/admin/master",
+    prefix="/api/admin/master",
     tags=["Admin Master"]
 )
 

@@ -4,7 +4,7 @@ from typing import Optional, List
 from datetime import datetime
 
 router = APIRouter(
-    prefix="/admin/config",
+    prefix="/api/admin/config",
     tags=["Admin Config"]
 )
 
