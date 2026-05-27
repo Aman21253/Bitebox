@@ -19,7 +19,8 @@ function RestaurantDashboard() {
     localStorage.getItem("user")
   );
 
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] =
+    useState(null);
 
   const [recentOrders, setRecentOrders] =
     useState([]);
@@ -38,6 +39,9 @@ function RestaurantDashboard() {
 
   const [regLoading, setRegLoading] =
     useState(false);
+
+  const [error, setError] =
+    useState("");
 
   const [regForm, setRegForm] =
     useState({
@@ -59,13 +63,13 @@ function RestaurantDashboard() {
 
   }, []);
 
-  // ─────────────────────────────────────
   // FETCH DASHBOARD
-  // ─────────────────────────────────────
 
   const fetchDashboardData = async () => {
 
     try {
+
+      setLoading(true);
 
       const [
         statsResponse,
@@ -123,9 +127,10 @@ function RestaurantDashboard() {
 
       } else {
 
-        console.error(
-          "Dashboard fetch failed:",
-          error
+        console.error(error);
+
+        setError(
+          "Failed to load dashboard"
         );
       }
 
@@ -135,11 +140,11 @@ function RestaurantDashboard() {
     }
   };
 
-  // ─────────────────────────────────────
-  // RESTAURANT SELF REGISTRATION
-  // ─────────────────────────────────────
+  // REGISTER RESTAURANT
 
   const handleRegister = async () => {
+
+    setError("");
 
     if (
 
@@ -153,7 +158,7 @@ function RestaurantDashboard() {
 
     ) {
 
-      alert(
+      setError(
         "Please fill all required fields"
       );
 
@@ -184,7 +189,7 @@ function RestaurantDashboard() {
 
     } catch (err) {
 
-      alert(
+      setError(
 
         err.response?.data?.detail ||
 
@@ -197,9 +202,7 @@ function RestaurantDashboard() {
     }
   };
 
-  // ─────────────────────────────────────
   // LOADING
-  // ─────────────────────────────────────
 
   if (loading) {
 
@@ -208,23 +211,54 @@ function RestaurantDashboard() {
       <div className="
         min-h-screen
         bg-[#070b14]
-        flex
-        items-center
-        justify-center
         text-white
-        text-4xl
-        font-black
+        flex
       ">
 
-        Loading Dashboard...
+        <RestaurantSidebar />
+
+        <div className="
+          flex-1
+          p-10
+        ">
+
+          <div className="
+            grid
+            grid-cols-1
+            md:grid-cols-2
+            xl:grid-cols-4
+            gap-6
+          ">
+
+            {
+              Array(4)
+              .fill(0)
+              .map((_, i) => (
+
+                <div
+                  key={i}
+                  className="
+                    h-[180px]
+                    rounded-[30px]
+                    bg-white/[0.03]
+                    border
+                    border-white/10
+                    animate-pulse
+                  "
+                />
+
+              ))
+            }
+
+          </div>
+
+        </div>
 
       </div>
     );
   }
 
-  // ─────────────────────────────────────
-  // APPROVAL STATUS UI
-  // ─────────────────────────────────────
+  // APPROVAL STATUS
 
   if (approvalStatus) {
 
@@ -262,7 +296,8 @@ function RestaurantDashboard() {
           </p>
 
           <h1 className="
-            text-4xl
+            text-3xl
+            md:text-4xl
             font-black
             mb-5
           ">
@@ -313,7 +348,7 @@ function RestaurantDashboard() {
 
               &&
 
-              "Your restaurant is currently under admin review. This usually takes a few hours."
+              "Your restaurant is currently under admin review."
 
             }
 
@@ -324,7 +359,7 @@ function RestaurantDashboard() {
 
               &&
 
-              "Your restaurant has been suspended temporarily. Please contact support."
+              "Your restaurant has been suspended temporarily."
 
             }
 
@@ -383,9 +418,7 @@ function RestaurantDashboard() {
     );
   }
 
-  // ─────────────────────────────────────
-  // INLINE REGISTRATION
-  // ─────────────────────────────────────
+  // REGISTRATION
 
   if (notRegistered) {
 
@@ -413,7 +446,7 @@ function RestaurantDashboard() {
           space-y-5
         ">
 
-          <div className="mb-2">
+          <div>
 
             <p className="
               text-orange-400
@@ -427,20 +460,30 @@ function RestaurantDashboard() {
             </p>
 
             <h1 className="
-              text-4xl
+              text-3xl
+              md:text-4xl
               font-black
             ">
               Register Your Restaurant
             </h1>
 
-            <p className="
-              text-gray-400
-              mt-3
-            ">
-              Fill in your restaurant details to get started.
-            </p>
-
           </div>
+
+          {
+            error && (
+
+              <div className="
+                rounded-2xl
+                border
+                border-red-500/20
+                bg-red-500/10
+                p-4
+                text-red-300
+              ">
+                {error}
+              </div>
+            )
+          }
 
           <div className="
             grid
@@ -449,155 +492,93 @@ function RestaurantDashboard() {
             gap-5
           ">
 
-            <div>
-
-              <label className="
-                text-sm
-                text-gray-400
-                mb-1
-                block
-              ">
-                Restaurant Name *
-              </label>
-
-              <input
-                className="
-                  w-full
-                  h-14
-                  rounded-2xl
-                  bg-white/[0.06]
-                  border
-                  border-white/10
-                  px-5
-                  text-white
-                  placeholder-gray-500
-                  outline-none
-                "
-                placeholder="e.g. Spice Garden"
-                value={regForm.name}
-                onChange={(e) =>
-                  setRegForm({
-                    ...regForm,
-                    name: e.target.value
-                  })
-                }
-              />
-
-            </div>
-
-            <div>
-
-              <label className="
-                text-sm
-                text-gray-400
-                mb-1
-                block
-              ">
-                Cuisine Type *
-              </label>
-
-              <input
-                className="
-                  w-full
-                  h-14
-                  rounded-2xl
-                  bg-white/[0.06]
-                  border
-                  border-white/10
-                  px-5
-                  text-white
-                  placeholder-gray-500
-                  outline-none
-                "
-                placeholder="e.g. North Indian"
-                value={regForm.cuisine}
-                onChange={(e) =>
-                  setRegForm({
-                    ...regForm,
-                    cuisine: e.target.value
-                  })
-                }
-              />
-
-            </div>
-
-          </div>
-
-          <div>
-
-            <label className="
-              text-sm
-              text-gray-400
-              mb-1
-              block
-            ">
-              Description
-            </label>
-
-            <textarea
-              className="
-                w-full
-                h-24
-                rounded-2xl
-                bg-white/[0.06]
-                border
-                border-white/10
-                px-5
-                py-4
-                text-white
-                placeholder-gray-500
-                outline-none
-                resize-none
-              "
-              placeholder="Restaurant description"
-              value={regForm.description}
-              onChange={(e) =>
-                setRegForm({
-                  ...regForm,
-                  description:
-                  e.target.value
-                })
-              }
-            />
-
-          </div>
-
-          <div>
-
-            <label className="
-              text-sm
-              text-gray-400
-              mb-1
-              block
-            ">
-              Address *
-            </label>
-
             <input
               className="
-                w-full
                 h-14
                 rounded-2xl
                 bg-white/[0.06]
                 border
                 border-white/10
                 px-5
-                text-white
-                placeholder-gray-500
                 outline-none
               "
-              placeholder="Full address"
-              value={regForm.address}
+              placeholder="Restaurant Name"
+              value={regForm.name}
               onChange={(e) =>
                 setRegForm({
                   ...regForm,
-                  address:
-                  e.target.value
+                  name: e.target.value
+                })
+              }
+            />
+
+            <input
+              className="
+                h-14
+                rounded-2xl
+                bg-white/[0.06]
+                border
+                border-white/10
+                px-5
+                outline-none
+              "
+              placeholder="Cuisine"
+              value={regForm.cuisine}
+              onChange={(e) =>
+                setRegForm({
+                  ...regForm,
+                  cuisine: e.target.value
                 })
               }
             />
 
           </div>
+
+          <textarea
+            className="
+              w-full
+              h-28
+              rounded-2xl
+              bg-white/[0.06]
+              border
+              border-white/10
+              px-5
+              py-4
+              outline-none
+              resize-none
+            "
+            placeholder="Description"
+            value={regForm.description}
+            onChange={(e) =>
+              setRegForm({
+                ...regForm,
+                description:
+                e.target.value
+              })
+            }
+          />
+
+          <input
+            className="
+              w-full
+              h-14
+              rounded-2xl
+              bg-white/[0.06]
+              border
+              border-white/10
+              px-5
+              outline-none
+            "
+            placeholder="Address"
+            value={regForm.address}
+            onChange={(e) =>
+              setRegForm({
+                ...regForm,
+                address:
+                e.target.value
+              })
+            }
+          />
 
           <div className="
             grid
@@ -614,7 +595,6 @@ function RestaurantDashboard() {
                 border
                 border-white/10
                 px-5
-                text-white
                 outline-none
               "
               placeholder="City"
@@ -636,7 +616,6 @@ function RestaurantDashboard() {
                 border
                 border-white/10
                 px-5
-                text-white
                 outline-none
               "
               placeholder="State"
@@ -658,7 +637,6 @@ function RestaurantDashboard() {
                 border
                 border-white/10
                 px-5
-                text-white
                 outline-none
               "
               placeholder="Pincode"
@@ -689,10 +667,9 @@ function RestaurantDashboard() {
                 border
                 border-white/10
                 px-5
-                text-white
                 outline-none
               "
-              placeholder="Phone Number"
+              placeholder="Phone"
               value={regForm.phone}
               onChange={(e) =>
                 setRegForm({
@@ -712,7 +689,6 @@ function RestaurantDashboard() {
                 border
                 border-white/10
                 px-5
-                text-white
                 outline-none
               "
               placeholder="Delivery Radius"
@@ -725,21 +701,6 @@ function RestaurantDashboard() {
                 })
               }
             />
-
-          </div>
-
-          <div className="
-            bg-orange-500/10
-            border
-            border-orange-500/20
-            rounded-2xl
-            px-5
-            py-4
-            text-orange-300
-            text-sm
-          ">
-
-            Your restaurant will be reviewed before going live.
 
           </div>
 
@@ -759,17 +720,9 @@ function RestaurantDashboard() {
           >
 
             {
-
               regLoading
-
-              ?
-
-              "Submitting..."
-
-              :
-
-              "Submit for Approval"
-
+              ? "Submitting..."
+              : "Submit for Approval"
             }
 
           </button>
@@ -780,9 +733,7 @@ function RestaurantDashboard() {
     );
   }
 
-  // ─────────────────────────────────────
-  // MAIN DASHBOARD
-  // ─────────────────────────────────────
+  // DASHBOARD STATS
 
   const dashboardStats = [
 
@@ -830,7 +781,8 @@ function RestaurantDashboard() {
 
       <div className="
         flex-1
-        px-10
+        px-6
+        md:px-10
         py-10
         overflow-y-auto
       ">
@@ -840,10 +792,15 @@ function RestaurantDashboard() {
           mx-auto
         ">
 
+          {/* HEADER */}
+
           <div className="
             flex
-            items-center
-            justify-between
+            flex-col
+            md:flex-row
+            md:items-center
+            md:justify-between
+            gap-5
             mb-14
           ">
 
@@ -861,9 +818,9 @@ function RestaurantDashboard() {
               </p>
 
               <h1 className="
-                text-5xl
+                text-3xl
+                md:text-5xl
                 font-black
-                tracking-tight
               ">
 
                 Welcome, {user?.name}
@@ -872,21 +829,297 @@ function RestaurantDashboard() {
 
             </div>
 
-            <button className="
-              w-14
-              h-14
-              rounded-2xl
-              bg-white/[0.04]
-              border
-              border-white/10
+            <div className="
               flex
               items-center
-              justify-center
+              gap-4
             ">
 
-              <Bell size={22} />
+              <div className="
+                px-4
+                py-2
+                rounded-xl
+                bg-green-500/10
+                border
+                border-green-500/20
+                text-green-300
+                text-sm
+                font-bold
+              ">
+                Live
+              </div>
 
-            </button>
+              <button className="
+                w-14
+                h-14
+                rounded-2xl
+                bg-white/[0.04]
+                border
+                border-white/10
+                flex
+                items-center
+                justify-center
+              ">
+
+                <Bell size={22} />
+
+              </button>
+
+            </div>
+
+          </div>
+
+          {/* STATS */}
+
+          <div className="
+            grid
+            grid-cols-1
+            sm:grid-cols-2
+            xl:grid-cols-5
+            gap-6
+            mb-10
+          ">
+
+            {
+              dashboardStats.map((item) => {
+
+                const Icon = item.icon;
+
+                return (
+
+                  <div
+                    key={item.title}
+                    className="
+                      rounded-[30px]
+                      border
+                      border-white/10
+                      bg-white/[0.03]
+                      p-6
+                    "
+                  >
+
+                    <div className="
+                      w-14
+                      h-14
+                      rounded-2xl
+                      bg-orange-500/10
+                      flex
+                      items-center
+                      justify-center
+                      mb-5
+                    ">
+
+                      <Icon
+                        className="
+                          text-orange-400
+                        "
+                        size={26}
+                      />
+
+                    </div>
+
+                    <p className="
+                      text-gray-400
+                      text-sm
+                      mb-2
+                    ">
+                      {item.title}
+                    </p>
+
+                    <h2 className="
+                      text-4xl
+                      font-black
+                    ">
+                      {item.value}
+                    </h2>
+
+                  </div>
+                );
+              })
+            }
+
+          </div>
+
+          {/* RECENT ORDERS */}
+
+          <div className="
+            rounded-[32px]
+            border
+            border-white/10
+            bg-white/[0.03]
+            p-8
+          ">
+
+            <div className="
+              flex
+              items-center
+              justify-between
+              mb-8
+            ">
+
+              <div>
+
+                <p className="
+                  text-orange-400
+                  text-sm
+                  font-bold
+                  mb-2
+                ">
+                  LIVE ORDERS
+                </p>
+
+                <h2 className="
+                  text-3xl
+                  font-black
+                ">
+                  Recent Orders
+                </h2>
+
+              </div>
+
+            </div>
+
+            {
+              recentOrders.length === 0 ? (
+
+                <div className="
+                  text-center
+                  py-20
+                  text-gray-500
+                ">
+
+                  No recent orders
+
+                </div>
+
+              ) : (
+
+                <div className="
+                  overflow-x-auto
+                ">
+
+                  <table className="
+                    w-full
+                  ">
+
+                    <thead>
+
+                      <tr className="
+                        border-b
+                        border-white/10
+                      ">
+
+                        <th className="
+                          text-left
+                          py-4
+                          text-gray-400
+                        ">
+                          Order
+                        </th>
+
+                        <th className="
+                          text-left
+                          py-4
+                          text-gray-400
+                        ">
+                          Customer
+                        </th>
+
+                        <th className="
+                          text-left
+                          py-4
+                          text-gray-400
+                        ">
+                          Amount
+                        </th>
+
+                        <th className="
+                          text-left
+                          py-4
+                          text-gray-400
+                        ">
+                          Status
+                        </th>
+
+                      </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                      {
+                        recentOrders.map((order) => (
+
+                          <tr
+                            key={order.id}
+                            className="
+                              border-b
+                              border-white/5
+                            "
+                          >
+
+                            <td className="
+                              py-5
+                              font-bold
+                            ">
+                              #{order.id}
+                            </td>
+
+                            <td className="
+                              py-5
+                            ">
+                              {
+                                order.customer
+                                ?.name || "Customer"
+                              }
+                            </td>
+
+                            <td className="
+                              py-5
+                              text-orange-400
+                              font-bold
+                            ">
+                              ₹{
+                                order.total_amount
+                              }
+                            </td>
+
+                            <td className="
+                              py-5
+                            ">
+
+                              <span className="
+                                px-3
+                                py-1
+                                rounded-xl
+                                bg-green-500/10
+                                border
+                                border-green-500/20
+                                text-green-300
+                                text-xs
+                                font-bold
+                              ">
+
+                                {
+                                  order.status ||
+                                  "Placed"
+                                }
+
+                              </span>
+
+                            </td>
+
+                          </tr>
+                        ))
+                      }
+
+                    </tbody>
+
+                  </table>
+
+                </div>
+              )
+            }
 
           </div>
 
