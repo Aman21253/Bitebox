@@ -1,6 +1,8 @@
+// FILE: src/components/admin/AdminEmptyState.jsx
+
 function AdminEmptyState({
 
-  icon,
+  icon: Icon,
 
   title,
 
@@ -38,7 +40,16 @@ function AdminEmptyState({
           justify-center
         ">
 
-          {icon}
+          {
+            Icon && (
+              <Icon
+                size={40}
+                className="
+                  text-orange-400
+                "
+              />
+            )
+          }
 
         </div>
 
@@ -48,6 +59,7 @@ function AdminEmptyState({
         text-3xl
         font-black
         mb-4
+        text-white
       ">
 
         {title}
@@ -59,6 +71,7 @@ function AdminEmptyState({
         max-w-xl
         mx-auto
         mb-8
+        leading-relaxed
       ">
 
         {description}
