@@ -192,7 +192,7 @@ function AdminRestaurants() {
               </div>
             ) : filteredRestaurants.length===0 ? (
               <AdminEmptyState
-                icon={Store}
+                icon={<Store size={40} className="text-orange-400" />}
                 title="No Pending Restaurants"
                 description="All restaurant approval requests have been processed."
               />
