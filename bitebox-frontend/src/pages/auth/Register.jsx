@@ -25,13 +25,9 @@ function Register() {
     useState({
 
       name: "",
-
       email: "",
-
       phone: "",
-
       password: "",
-
       role: "customer",
     });
 
@@ -54,6 +50,50 @@ function Register() {
 
     e.preventDefault();
 
+  if (!formData.name.trim()) {
+    return alert("Name is required");
+  }
+
+  if (formData.name.trim().length < 2) {
+    return alert(
+      "Name must be at least 2 characters"
+    );
+  }
+
+  if (!formData.email.trim()) {
+    return alert("Email is required");
+  }
+
+  const emailRegex =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(formData.email)) {
+    return alert(
+      "Please enter a valid email"
+    );
+  }
+
+  const phoneRegex =
+      /^[6-9]\d{9}$/;
+
+    if (!phoneRegex.test(formData.phone)) {
+      return alert(
+        "Please enter a valid 10-digit phone number"
+      );
+    }
+
+    if (!formData.password) {
+      return alert(
+        "Password is required"
+      );
+    }
+
+    if (formData.password.length < 6) {
+      return alert(
+        "Password must be at least 6 characters"
+      );
+    }
+
     try {
 
       setLoading(true);
@@ -61,12 +101,8 @@ function Register() {
       await API.post(
         "/auth/otp/send",
         {
-
-          phone:
-            formData.phone,
-
-          purpose:
-            "registration",
+          phone: formData.phone,
+          purpose: "registration",
         }
       );
 
